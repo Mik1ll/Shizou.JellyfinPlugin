@@ -6,7 +6,8 @@ namespace Shizou.JellyfinPlugin;
 
 public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
 {
-    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken) => throw new NotImplementedException();
+    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
 
     public Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken) => throw new NotImplementedException();
 

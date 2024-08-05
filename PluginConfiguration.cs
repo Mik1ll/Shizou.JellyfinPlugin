@@ -4,5 +4,4 @@ namespace Shizou.JellyfinPlugin;
 
 public class PluginConfiguration : BasePluginConfiguration
 {
-    
 }

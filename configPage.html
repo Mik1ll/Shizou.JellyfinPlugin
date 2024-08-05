@@ -5,35 +5,35 @@
     <title>Template</title>
 </head>
 <body>
-<div id="ShizouConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+<div class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox" data-role="page" id="ShizouConfigPage">
     <div data-role="content">
         <div class="content-primary">
             <form id="ShizouConfigForm">
-<!--                <div class="selectContainer">-->
-<!--                    <label class="selectLabel" for="Options">Several Options</label>-->
-<!--                    <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">-->
-<!--                        <option id="optOneOption" value="OneOption">One Option</option>-->
-<!--                        <option id="optAnotherOption" value="AnotherOption">Another Option</option>-->
-<!--                    </select>-->
-<!--                </div>-->
-<!--                <div class="inputContainer">-->
-<!--                    <label class="inputLabel inputLabelUnfocused" for="AnInteger">An Integer</label>-->
-<!--                    <input id="AnInteger" name="AnInteger" type="number" is="emby-input" min="0" />-->
-<!--                    <div class="fieldDescription">A Description</div>-->
-<!--                </div>-->
-<!--                <div class="checkboxContainer checkboxContainer-withDescription">-->
-<!--                    <label class="emby-checkbox-label">-->
-<!--                        <input id="TrueFalseSetting" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />-->
-<!--                        <span>A Checkbox</span>-->
-<!--                    </label>-->
-<!--                </div>-->
-<!--                <div class="inputContainer">-->
-<!--                    <label class="inputLabel inputLabelUnfocused" for="AString">A String</label>-->
-<!--                    <input id="AString" name="AString" type="text" is="emby-input" />-->
-<!--                    <div class="fieldDescription">Another Description</div>-->
-<!--                </div>-->
+                <!--                <div class="selectContainer">-->
+                <!--                    <label class="selectLabel" for="Options">Several Options</label>-->
+                <!--                    <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">-->
+                <!--                        <option id="optOneOption" value="OneOption">One Option</option>-->
+                <!--                        <option id="optAnotherOption" value="AnotherOption">Another Option</option>-->
+                <!--                    </select>-->
+                <!--                </div>-->
+                <!--                <div class="inputContainer">-->
+                <!--                    <label class="inputLabel inputLabelUnfocused" for="AnInteger">An Integer</label>-->
+                <!--                    <input id="AnInteger" name="AnInteger" type="number" is="emby-input" min="0" />-->
+                <!--                    <div class="fieldDescription">A Description</div>-->
+                <!--                </div>-->
+                <!--                <div class="checkboxContainer checkboxContainer-withDescription">-->
+                <!--                    <label class="emby-checkbox-label">-->
+                <!--                        <input id="TrueFalseSetting" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />-->
+                <!--                        <span>A Checkbox</span>-->
+                <!--                    </label>-->
+                <!--                </div>-->
+                <!--                <div class="inputContainer">-->
+                <!--                    <label class="inputLabel inputLabelUnfocused" for="AString">A String</label>-->
+                <!--                    <input id="AString" name="AString" type="text" is="emby-input" />-->
+                <!--                    <div class="fieldDescription">Another Description</div>-->
+                <!--                </div>-->
                 <div>
-                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                    <button class="raised button-submit block emby-button" is="emby-button" type="submit">
                         <span>Save</span>
                     </button>
                 </div>
@@ -46,7 +46,7 @@
         };
 
         document.querySelector('#ShizouConfigPage')
-            .addEventListener('pageshow', function() {
+            .addEventListener('pageshow', function () {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                     // document.querySelector('#Options').value = config.Options;
@@ -58,7 +58,7 @@
             });
 
         document.querySelector('#ShizouConfigForm')
-            .addEventListener('submit', function(e) {
+            .addEventListener('submit', function (e) {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
                     // config.Options = document.querySelector('#Options').value;

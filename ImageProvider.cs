@@ -16,5 +16,5 @@ public class ImageProvider : IRemoteImageProvider
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) => throw new NotImplementedException();
 
-    public string Name => "AniDB";
+    public string Name => "Shizou";
 }

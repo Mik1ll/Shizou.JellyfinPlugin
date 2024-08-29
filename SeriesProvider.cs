@@ -1,4 +1,5 @@
-﻿using MediaBrowser.Controller.Configuration;
+﻿using System.Text.RegularExpressions;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -51,13 +52,17 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
         var animeIdStr = info.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
+        if (string.IsNullOrWhiteSpace(animeIdStr))
+            animeIdStr = Regex.Match(info.Name, @$"\[{ProviderIds.Shizou}-(\d+)\]") is { Success: true } reg ? reg.Groups[1].Value : null;
         if (!int.TryParse(animeIdStr, out var animeId))
             return new MetadataResult<Series>();
         var port = Plugin.Instance?.Configuration.ServerPort ?? 443;
         var uriBuilder = new UriBuilder("https", "localhost", port);
         var client = new ShizouHttpClient(uriBuilder.Uri.AbsoluteUri, _clientFactory.CreateClient());
         var anime = await client.AniDbAnimesAsync(animeId, cancellationToken).ConfigureAwait(false);
+        
         var res = new MetadataResult<Series>();
+        res.Item.SetProviderId(ProviderIds.Shizou, animeId.ToString());
 
         DateTimeOffset? airDateTime = int.TryParse(anime.AirDate[..4], out var airY) && int.TryParse(anime.AirDate[5..7], out var airM) &&
                                       int.TryParse(anime.AirDate[8..10], out var airD)
@@ -82,7 +87,6 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 airDateTime > DateTime.Now ? SeriesStatus.Unreleased :
                 airDateTime is not null && endDateTime is not null ? SeriesStatus.Continuing : null
         };
-        res.Item.ProviderIds.Add(ProviderIds.Shizou, animeId.ToString());
         res.HasMetadata = true;
 
         return res;

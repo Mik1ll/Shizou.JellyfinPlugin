@@ -18,8 +18,35 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         _serverConfigurationManager = serverConfigurationManager;
     }
 
-    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
+    public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
+    {
+        var results = new List<RemoteSearchResult>();
+        var animeIdStr = searchInfo.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
+        if (int.TryParse(animeIdStr, out var animeId))
+        {
+            results.Add(new RemoteSearchResult());
+            throw new NotImplementedException();
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchInfo.Name))
+        {
+            var port = Plugin.Instance?.Configuration.ServerPort ?? 443;
+            var uriBuilder = new UriBuilder("https", "localhost", port);
+            var client = new ShizouHttpClient(uriBuilder.Uri.AbsoluteUri, _clientFactory.CreateClient());
+
+            var aids = await client.GetAnimeSearchAsync(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+
+            results.AddRange(aids.Select(a => new RemoteSearchResult
+            {
+                Name = null,
+                ImageUrl = null,
+                ProviderIds = new Dictionary<string, string> { { ProviderIds.Shizou, a.ToString() } }
+            }));
+        }
+
+
+        return results;
+    }
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {

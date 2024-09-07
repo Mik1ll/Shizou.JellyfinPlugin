@@ -4,23 +4,24 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using Shizou.HttpClient;
 
 namespace Shizou.JellyfinPlugin;
 
 public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
-    private readonly IHttpClientFactory _clientFactory;
     private readonly IServerConfigurationManager _serverConfigurationManager;
+    private readonly Plugin _plugin;
 
-    public SeriesProvider(IHttpClientFactory clientFactory, IServerConfigurationManager serverConfigurationManager)
+    public SeriesProvider(IServerConfigurationManager serverConfigurationManager)
     {
-        _clientFactory = clientFactory;
         _serverConfigurationManager = serverConfigurationManager;
+        _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
     }
 
     public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
     {
+        if ((_plugin.ResilienceHandler.InnerHandler as SocketsHttpHandler)?.CookieContainer.Count == 0)
+            await _plugin.ShizouHttpClient.LoginAsync(_plugin.Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
         var results = new List<RemoteSearchResult>();
         var animeIdStr = searchInfo.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
         if (int.TryParse(animeIdStr, out var animeId))
@@ -31,11 +32,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
         if (!string.IsNullOrWhiteSpace(searchInfo.Name))
         {
-            var port = Plugin.Instance?.Configuration.ServerPort ?? 443;
-            var uriBuilder = new UriBuilder("https", "localhost", port);
-            var client = new ShizouHttpClient(uriBuilder.Uri.AbsoluteUri, _clientFactory.CreateClient());
-
-            var aids = await client.GetAnimeSearchAsync(searchInfo.Name, cancellationToken).ConfigureAwait(false);
+            var aids = await _plugin.ShizouHttpClient.GetAnimeSearchAsync(searchInfo.Name, cancellationToken).ConfigureAwait(false);
 
             results.AddRange(aids.Select(a => new RemoteSearchResult
             {
@@ -51,15 +48,14 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
+        if ((_plugin.ResilienceHandler.InnerHandler as SocketsHttpHandler)?.CookieContainer.Count == 0)
+            await _plugin.ShizouHttpClient.LoginAsync(_plugin.Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
         var animeIdStr = info.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
         if (string.IsNullOrWhiteSpace(animeIdStr))
             animeIdStr = Regex.Match(info.Name, @$"\[{ProviderIds.Shizou}-(\d+)\]") is { Success: true } reg ? reg.Groups[1].Value : null;
         if (!int.TryParse(animeIdStr, out var animeId))
             return new MetadataResult<Series>();
-        var port = Plugin.Instance?.Configuration.ServerPort ?? 443;
-        var uriBuilder = new UriBuilder("https", "localhost", port);
-        var client = new ShizouHttpClient(uriBuilder.Uri.AbsoluteUri, _clientFactory.CreateClient());
-        var anime = await client.AniDbAnimesAsync(animeId, cancellationToken).ConfigureAwait(false);
+        var anime = await _plugin.ShizouHttpClient.AniDbAnimesAsync(animeId, cancellationToken).ConfigureAwait(false);
         
         var res = new MetadataResult<Series>();
         res.Item.SetProviderId(ProviderIds.Shizou, animeId.ToString());
@@ -94,9 +90,5 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public string Name => "Shizou";
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-    {
-        using var client = _clientFactory.CreateClient();
-        return await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
-    }
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) => await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 }

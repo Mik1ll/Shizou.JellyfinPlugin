@@ -27,11 +27,11 @@
                 <!--                        <span>A Checkbox</span>-->
                 <!--                    </label>-->
                 <!--                </div>-->
-                <!--                <div class="inputContainer">-->
-                <!--                    <label class="inputLabel inputLabelUnfocused" for="AString">A String</label>-->
-                <!--                    <input id="AString" name="AString" type="text" is="emby-input" />-->
-                <!--                    <div class="fieldDescription">Another Description</div>-->
-                <!--                </div>-->
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="ServerPassword">Server Password</label>
+                    <input id="ServerPassword" is="emby-input" name="ServerPassword" type="text"/>
+                    <div class="fieldDescription">The password used to access Shizou</div>
+                </div>
                 <div>
                     <button class="raised button-submit block emby-button" is="emby-button" type="submit">
                         <span>Save</span>
@@ -52,7 +52,7 @@
                     // document.querySelector('#Options').value = config.Options;
                     document.querySelector('#ServerPort').value = config.ServerPort;
                     // document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
-                    // document.querySelector('#AString').value = config.AString;
+                    document.querySelector('#ServerPassword').value = config.ServerPassword;
                     Dashboard.hideLoadingMsg();
                 });
             });
@@ -64,7 +64,7 @@
                     // config.Options = document.querySelector('#Options').value;
                     config.ServerPort = document.querySelector('#ServerPort').value;
                     // config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
-                    // config.AString = document.querySelector('#AString').value;
+                    config.ServerPassword = document.querySelector('#ServerPassword').value;
                     ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
                         Dashboard.processPluginConfigurationUpdateResult(result);
                     });

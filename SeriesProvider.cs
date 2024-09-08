@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -9,19 +8,12 @@ namespace Shizou.JellyfinPlugin;
 
 public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
-    private readonly IServerConfigurationManager _serverConfigurationManager;
     private readonly Plugin _plugin;
 
-    public SeriesProvider(IServerConfigurationManager serverConfigurationManager)
-    {
-        _serverConfigurationManager = serverConfigurationManager;
-        _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
-    }
+    public SeriesProvider() => _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
 
     public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
     {
-        if ((_plugin.ResilienceHandler.InnerHandler as SocketsHttpHandler)?.CookieContainer.Count == 0)
-            await _plugin.ShizouHttpClient.LoginAsync(_plugin.Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
         var results = new List<RemoteSearchResult>();
         var animeIdStr = searchInfo.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
         if (int.TryParse(animeIdStr, out var animeId))
@@ -48,17 +40,14 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
-        if ((_plugin.ResilienceHandler.InnerHandler as SocketsHttpHandler)?.CookieContainer.Count == 0)
-            await _plugin.ShizouHttpClient.LoginAsync(_plugin.Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
         var animeIdStr = info.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
         if (string.IsNullOrWhiteSpace(animeIdStr))
-            animeIdStr = Regex.Match(info.Name, @$"\[{ProviderIds.Shizou}-(\d+)\]") is { Success: true } reg ? reg.Groups[1].Value : null;
+            animeIdStr = Regex.Match(Path.GetFileName(info.Path), @$"\[{ProviderIds.Shizou}-(\d+)\]") is { Success: true } reg ? reg.Groups[1].Value : null;
         if (!int.TryParse(animeIdStr, out var animeId))
             return new MetadataResult<Series>();
+
         var anime = await _plugin.ShizouHttpClient.AniDbAnimesAsync(animeId, cancellationToken).ConfigureAwait(false);
-        
-        var res = new MetadataResult<Series>();
-        res.Item.SetProviderId(ProviderIds.Shizou, animeId.ToString());
+
 
         DateTimeOffset? airDateTime = int.TryParse(anime.AirDate[..4], out var airY) && int.TryParse(anime.AirDate[5..7], out var airM) &&
                                       int.TryParse(anime.AirDate[8..10], out var airD)
@@ -68,27 +57,32 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                                       int.TryParse(anime.EndDate[8..10], out var endD)
             ? new DateTimeOffset(new DateTime(endY, endM, endD), TimeSpan.FromHours(9))
             : null;
-        res.Item = new Series
+        var res = new MetadataResult<Series>
         {
-            Name = anime.TitleTranscription,
-            OriginalTitle = anime.TitleOriginal,
-            PremiereDate = airDateTime?.UtcDateTime,
-            EndDate = endDateTime?.UtcDateTime,
-            Overview = anime.Description,
-            HomePageUrl = $"https://anidb.net/anime/{animeId}",
-            CommunityRating = null,
-            ProductionYear = airY != 0 ? airY : null,
-            DateLastMediaAdded = null,
-            Status = endDateTime <= DateTime.Now ? SeriesStatus.Ended :
-                airDateTime > DateTime.Now ? SeriesStatus.Unreleased :
-                airDateTime is not null && endDateTime is not null ? SeriesStatus.Continuing : null
+            Item = new Series
+            {
+                Name = anime.TitleTranscription,
+                OriginalTitle = anime.TitleOriginal,
+                PremiereDate = airDateTime?.UtcDateTime,
+                EndDate = endDateTime?.UtcDateTime,
+                Overview = anime.Description,
+                HomePageUrl = $"https://anidb.net/anime/{animeId}",
+                CommunityRating = null,
+                ProductionYear = airY != 0 ? airY : null,
+                DateLastMediaAdded = null,
+                Status = endDateTime <= DateTime.Now ? SeriesStatus.Ended :
+                    airDateTime > DateTime.Now ? SeriesStatus.Unreleased :
+                    airDateTime is not null && endDateTime is not null ? SeriesStatus.Continuing : null,
+                ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId.ToString() } }
+            },
+            HasMetadata = true
         };
-        res.HasMetadata = true;
 
         return res;
     }
 
     public string Name => "Shizou";
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) => await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
+        await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 }

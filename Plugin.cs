@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Net;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
@@ -13,34 +14,33 @@ namespace Shizou.JellyfinPlugin;
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
 #pragma warning disable EXTEXP0001
-    public ResilienceHandler ResilienceHandler { get; private set; }
+    private readonly ResilienceHandler _httpHandler;
 #pragma warning restore EXTEXP0001
-    public static Plugin? Instance { get; private set; }
-
-    public System.Net.Http.HttpClient HttpClient { get; private set; }
-    public ShizouHttpClient ShizouHttpClient { get; private set; }
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
     {
         var retryPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
-            .AddConcurrencyLimiter(2, int.MaxValue)
-            // .AddRetry(new HttpRetryStrategyOptions()
-            // {
-            //     MaxRetryAttempts = 1,
-            //     ShouldHandle = static args => ValueTask.FromResult(args is { Outcome.Result.StatusCode: HttpStatusCode.Unauthorized }),
-            //     OnRetry = static async _ =>
-            //     {
-            //         if (Instance is null)
-            //             throw new InvalidOperationException("Shizou Instance is null");
-            //         if (Instance.ShizouHttpClient is null)
-            //             throw new InvalidOperationException("Shizou Http Client is null");
-            //         await Instance.ShizouHttpClient.LoginAsync(Instance.Configuration.ServerPassword).ConfigureAwait(false);
-            //     }
-            // })
+            .AddRetry(new HttpRetryStrategyOptions()
+            {
+                MaxRetryAttempts = 1,
+                ShouldHandle = static args => ValueTask.FromResult(args is { Outcome.Result.StatusCode: HttpStatusCode.Unauthorized }),
+                OnRetry = async _ =>
+                {
+                    await _loggingInLock.WaitAsync().ConfigureAwait(false);
+                    try
+                    {
+                        _loggedIn = false;
+                        await LoginAsync(CancellationToken.None, true).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        _loggingInLock.Release();
+                    }
+                }
+            })
             .Build();
-
 #pragma warning disable EXTEXP0001
-        ResilienceHandler = new ResilienceHandler(retryPipeline)
+        _httpHandler = new ResilienceHandler(retryPipeline)
 #pragma warning restore EXTEXP0001
         {
             InnerHandler = new SocketsHttpHandler()
@@ -48,15 +48,43 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 PooledConnectionLifetime = TimeSpan.FromMinutes(2)
             }
         };
-        HttpClient = new System.Net.Http.HttpClient(ResilienceHandler);
+
+
+        HttpClient = new System.Net.Http.HttpClient(_httpHandler);
         HttpClient.BaseAddress = new Uri("https://localhost");
         ShizouHttpClient = new ShizouHttpClient(HttpClient);
         Instance = this;
     }
 
+    public static Plugin? Instance { get; private set; }
+
     public override string Name => "Shizou";
 
     public override Guid Id => Guid.Parse("1E81A180-292D-4523-9D57-D03F5221C2F2");
+
+    public System.Net.Http.HttpClient HttpClient { get; private set; }
+    public ShizouHttpClient ShizouHttpClient { get; private set; }
+
+    private bool _loggedIn;
+
+    private readonly SemaphoreSlim _loggingInLock = new(1, 1);
+
+    public async Task LoginAsync(CancellationToken cancellationToken, bool insideLock = false)
+    {
+        if (!insideLock)
+            await _loggingInLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!_loggedIn)
+                await ShizouHttpClient.LoginAsync(Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
+            _loggedIn = true;
+        }
+        finally
+        {
+            if (!insideLock)
+                _loggingInLock.Release();
+        }
+    }
 
     public void ChangeHttpClientPort(int port)
     {
@@ -67,7 +95,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             Port = port
         }.Uri;
         HttpClient.Dispose();
-        HttpClient = new System.Net.Http.HttpClient(ResilienceHandler);
+        HttpClient = new System.Net.Http.HttpClient(_httpHandler);
         HttpClient.BaseAddress = uri;
         ShizouHttpClient = new ShizouHttpClient(HttpClient);
     }

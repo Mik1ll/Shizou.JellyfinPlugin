@@ -12,7 +12,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
 
     public Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
     {
-        var res = new MetadataResult<Season>()
+        var result = new MetadataResult<Season>()
         {
             HasMetadata = true,
             Item = new Season()
@@ -21,7 +21,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
             }
         };
 
-        return Task.FromResult(res);
+        return Task.FromResult(result);
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

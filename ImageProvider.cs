@@ -9,27 +9,25 @@ namespace Shizou.JellyfinPlugin;
 
 public class ImageProvider : IRemoteImageProvider
 {
-    private readonly Plugin _plugin;
-
-    public ImageProvider() => _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
+    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
 
     public bool Supports(BaseItem item) => item is Movie or Series or Season;
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => [ImageType.Primary];
 
     public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
     {
-        var list = new List<RemoteImageInfo>();
-        var animeIdStr = item.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
-        if (!int.TryParse(animeIdStr, out var animeId))
-            return Task.FromResult<IEnumerable<RemoteImageInfo>>(list);
+        var results = new List<RemoteImageInfo>();
+        var animeId = item.GetProviderId(ProviderIds.Shizou);
+        if (string.IsNullOrWhiteSpace(animeId))
+            return Task.FromResult<IEnumerable<RemoteImageInfo>>(results);
 
-        list.Add(new RemoteImageInfo()
+        results.Add(new RemoteImageInfo()
         {
             ProviderName = Name,
-            Url = new Uri(_plugin.HttpClient.BaseAddress!, $"api/Images/AnimePosters/{animeId}").AbsoluteUri
+            Url = $"api/Images/AnimePosters/{animeId}"
         });
 
-        return Task.FromResult<IEnumerable<RemoteImageInfo>>(list);
+        return Task.FromResult<IEnumerable<RemoteImageInfo>>(results);
     }
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)

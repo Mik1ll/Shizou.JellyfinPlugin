@@ -16,13 +16,11 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
-        var animeIdStr = info.ProviderIds.GetValueOrDefault(ProviderIds.Shizou);
-        if (string.IsNullOrWhiteSpace(animeIdStr))
-            animeIdStr = Regex.Match(Path.GetFileName(info.Path), @$"\[{ProviderIds.Shizou}-(\d+)\]") is { Success: true } reg ? reg.Groups[1].Value : null;
-        if (!int.TryParse(animeIdStr, out var animeId))
+        var animeId = info.GetProviderId(ProviderIds.Shizou) ?? Regex.Match(info.Name, @$"\[{ProviderIds.Shizou}-(\d+)\]").Groups[1].Value;
+        if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
-        var anime = await _plugin.ShizouHttpClient.AniDbAnimesAsync(animeId, cancellationToken).ConfigureAwait(false);
+        var anime = await _plugin.ShizouHttpClient.AniDbAnimesAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
 
 
         DateTimeOffset? airDateTime = anime.AirDate is not null && int.TryParse(anime.AirDate[..4], out var airY) &&
@@ -35,7 +33,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                                       int.TryParse(anime.EndDate[8..10], out var endD)
             ? new DateTimeOffset(new DateTime(endY, endM, endD), TimeSpan.FromHours(9))
             : null;
-        var res = new MetadataResult<Series>
+        var result = new MetadataResult<Series>
         {
             Item = new Series
             {
@@ -51,12 +49,12 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 Status = endDateTime <= DateTime.Now ? SeriesStatus.Ended :
                     airDateTime > DateTime.Now ? SeriesStatus.Unreleased :
                     airDateTime is not null && endDateTime is not null ? SeriesStatus.Continuing : null,
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId.ToString() } }
+                ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId } }
             },
             HasMetadata = true
         };
 
-        return res;
+        return result;
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

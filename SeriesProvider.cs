@@ -12,8 +12,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public SeriesProvider() => _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
 
-    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
-        Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
+    public string Name => "Shizou";
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
@@ -60,8 +59,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         return res;
     }
 
-    public string Name => "Shizou";
+    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
+        _plugin.HttpClient.GetAsync(url, cancellationToken);
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
+        Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 }

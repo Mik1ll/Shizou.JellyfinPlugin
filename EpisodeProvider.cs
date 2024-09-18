@@ -8,11 +8,9 @@ namespace Shizou.JellyfinPlugin;
 
 public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 {
-    private readonly Plugin _plugin;
-    public EpisodeProvider() => _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
+    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
 
-    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken) =>
-        Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
+    public string Name => "Shizou";
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
     {
@@ -47,8 +45,9 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
         return res;
     }
 
-    public string Name => "Shizou";
+    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
+        _plugin.HttpClient.GetAsync(url, cancellationToken);
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken) =>
+        Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 }

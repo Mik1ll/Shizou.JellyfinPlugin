@@ -6,14 +6,7 @@ namespace Shizou.JellyfinPlugin;
 
 public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
 {
-    private readonly Plugin _plugin;
-    private readonly SeriesProvider _seriesProvider;
-
-    public SeasonProvider()
-    {
-        _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
-        _seriesProvider = new SeriesProvider();
-    }
+    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
 
     public string Name { get; } = "Shizou";
 
@@ -31,8 +24,8 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
         return Task.FromResult(res);
     }
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
+        _plugin.HttpClient.GetAsync(url, cancellationToken);
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeasonInfo searchInfo, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<RemoteSearchResult>>([]);

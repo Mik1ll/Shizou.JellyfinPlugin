@@ -2,7 +2,7 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 
-namespace Shizou.JellyfinPlugin;
+namespace Shizou.JellyfinPlugin.Providers;
 
 public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
 {

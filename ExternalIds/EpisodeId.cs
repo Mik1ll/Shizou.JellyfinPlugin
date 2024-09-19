@@ -3,7 +3,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-namespace Shizou.JellyfinPlugin;
+namespace Shizou.JellyfinPlugin.ExternalIds;
 
 public class EpisodeId : IExternalId
 {

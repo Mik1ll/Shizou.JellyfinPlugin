@@ -4,7 +4,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Series = MediaBrowser.Controller.Entities.TV.Series;
 
-namespace Shizou.JellyfinPlugin;
+namespace Shizou.JellyfinPlugin.ExternalIds;
 
 public class SeriesId : IExternalId
 {

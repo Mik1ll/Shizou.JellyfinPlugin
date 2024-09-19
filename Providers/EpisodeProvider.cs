@@ -5,7 +5,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Shizou.HttpClient;
 
-namespace Shizou.JellyfinPlugin;
+namespace Shizou.JellyfinPlugin.Providers;
 
 public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 {

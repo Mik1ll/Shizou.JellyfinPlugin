@@ -5,7 +5,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-namespace Shizou.JellyfinPlugin;
+namespace Shizou.JellyfinPlugin.Providers;
 
 public class ImageProvider : IRemoteImageProvider
 {

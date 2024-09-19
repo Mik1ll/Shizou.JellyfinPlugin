@@ -15,7 +15,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
     {
-        var epId = info.GetProviderId(ProviderIds.ShizouEp) ?? AniDbIdParser.IdFromString(info.Name);
+        var epId = info.GetProviderId(ProviderIds.ShizouEp) ?? AniDbIdParser.IdFromString(Path.GetFileName(info.Path));
         if (string.IsNullOrWhiteSpace(epId))
             return new MetadataResult<Episode>();
 
@@ -26,7 +26,15 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             HasMetadata = true,
             Item = new Episode()
             {
-                Name = episode.TitleEnglish,
+                Name = episode.EpisodeType switch
+                    {
+                        AniDbEpisodeEpisodeType.Special => "S",
+                        AniDbEpisodeEpisodeType.Credits => "C",
+                        AniDbEpisodeEpisodeType.Trailer => "T",
+                        AniDbEpisodeEpisodeType.Parody => "P",
+                        AniDbEpisodeEpisodeType.Other => "O",
+                        _ => ""
+                    } + $"{episode.Number}. {episode.TitleEnglish}",
                 Overview = episode.Summary,
                 RunTimeTicks = episode.DurationMinutes is not null ? TimeSpan.FromMinutes(episode.DurationMinutes.Value).Ticks : null,
                 OriginalTitle = episode.TitleOriginal,
@@ -34,8 +42,8 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
                 ProductionYear = episode.AirDate?.Year,
                 IndexNumber = episode.Number,
                 // TODO: Set based on episodes associated with file
-                IndexNumberEnd = episode.Number,
-                ParentIndexNumber = episode.EpisodeType is AniDbEpisodeEpisodeType.Episode ? 1 : 0,
+                IndexNumberEnd = null,
+                ParentIndexNumber = episode.EpisodeType is AniDbEpisodeEpisodeType.Episode ? null : 0,
                 ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouEp, epId } }
             }
         };

@@ -14,7 +14,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
-        var animeId = info.GetProviderId(ProviderIds.Shizou) ?? AniDbIdParser.IdFromString(info.Name);
+        var animeId = info.GetProviderId(ProviderIds.Shizou) ?? AniDbIdParser.IdFromString(Path.GetFileName(info.Path));
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
@@ -41,9 +41,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 EndDate = endDateTime?.UtcDateTime,
                 Overview = anime.Description,
                 HomePageUrl = $"https://anidb.net/anime/{animeId}",
-                CommunityRating = null,
                 ProductionYear = airDateTime?.Year,
-                DateLastMediaAdded = null,
                 Status = endDateTime <= DateTime.Now ? SeriesStatus.Ended :
                     airDateTime > DateTime.Now ? SeriesStatus.Unreleased :
                     airDateTime is not null && endDateTime is not null ? SeriesStatus.Continuing : null,

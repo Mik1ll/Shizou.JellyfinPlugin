@@ -9,8 +9,8 @@ public class AniDbEpisodeId : IExternalId
 {
     public bool Supports(IHasProviderIds item) => item is Episode;
 
-    public string ProviderName => "AniDB Episode";
+    public string ProviderName => "AniDB";
     public string Key => ProviderIds.ShizouEp;
     public ExternalIdMediaType? Type => ExternalIdMediaType.Episode;
-    public string? UrlFormatString => null;
+    public string UrlFormatString => "https://anidb.net/episode/{0}";
 }

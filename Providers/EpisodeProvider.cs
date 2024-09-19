@@ -1,9 +1,9 @@
-﻿using System.Text.RegularExpressions;
-using MediaBrowser.Controller.Entities.TV;
+﻿using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Shizou.HttpClient;
+using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
 
@@ -15,7 +15,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
     {
-        var epId = info.GetProviderId(ProviderIds.ShizouEp) ?? Regex.Match(info.Name, @$"\[{ProviderIds.ShizouEp}-(\d+)\]").Groups[1].Value;
+        var epId = info.GetProviderId(ProviderIds.ShizouEp) ?? AniDbIdParser.IdFromString(info.Name);
         if (string.IsNullOrWhiteSpace(epId))
             return new MetadataResult<Episode>();
 

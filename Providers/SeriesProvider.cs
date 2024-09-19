@@ -1,22 +1,20 @@
-﻿using System.Text.RegularExpressions;
-using MediaBrowser.Controller.Entities.TV;
+﻿using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Shizou.JellyfinPlugin.ExternalIds;
 
-namespace Shizou.JellyfinPlugin;
+namespace Shizou.JellyfinPlugin.Providers;
 
 public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
-    private readonly Plugin _plugin;
-
-    public SeriesProvider() => _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
+    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
 
     public string Name => "Shizou";
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
-        var animeId = info.GetProviderId(ProviderIds.Shizou) ?? Regex.Match(info.Name, @$"\[{ProviderIds.Shizou}-(\d+)\]").Groups[1].Value;
+        var animeId = info.GetProviderId(ProviderIds.Shizou) ?? AniDbIdParser.IdFromString(info.Name);
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 

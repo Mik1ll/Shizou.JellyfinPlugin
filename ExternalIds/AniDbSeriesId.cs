@@ -6,12 +6,12 @@ using Series = MediaBrowser.Controller.Entities.TV.Series;
 
 namespace Shizou.JellyfinPlugin.ExternalIds;
 
-public class SeriesId : IExternalId
+public class AniDbSeriesId : IExternalId
 {
     public bool Supports(IHasProviderIds item) => item is Series or Movie;
 
-    public string ProviderName => "Shizou Series";
+    public string ProviderName => "AniDB Series";
     public string Key => ProviderIds.Shizou;
-    public ExternalIdMediaType? Type => null;
+    public ExternalIdMediaType? Type => ExternalIdMediaType.Series;
     public string? UrlFormatString => null;
 }

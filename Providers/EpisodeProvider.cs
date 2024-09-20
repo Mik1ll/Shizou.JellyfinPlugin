@@ -19,7 +19,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
         if (string.IsNullOrWhiteSpace(epId))
             return new MetadataResult<Episode>();
 
-        var episode = await _plugin.ShizouHttpClient.AniDbEpisodesAsync(Convert.ToInt32(epId), cancellationToken).ConfigureAwait(false);
+        var episode = await _plugin.ShizouHttpClient.AniDbEpisodesGetAsync(Convert.ToInt32(epId), cancellationToken).ConfigureAwait(false);
 
         var result = new MetadataResult<Episode>()
         {

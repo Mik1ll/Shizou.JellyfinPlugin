@@ -76,7 +76,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         try
         {
             if (!_loggedIn)
-                await ShizouHttpClient.LoginAsync(Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
+                await ShizouHttpClient.AccountLoginAsync(Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
             _loggedIn = true;
         }
         finally

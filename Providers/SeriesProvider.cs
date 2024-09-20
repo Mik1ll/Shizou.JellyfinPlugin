@@ -18,7 +18,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
-        var anime = await _plugin.ShizouHttpClient.AniDbAnimesAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+        var anime = await _plugin.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
 
 
         DateTimeOffset? airDateTime = anime.AirDate is not null && int.TryParse(anime.AirDate[..4], out var airY) &&

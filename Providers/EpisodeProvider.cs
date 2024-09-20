@@ -15,11 +15,27 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
     {
-        var epId = info.GetProviderId(ProviderIds.ShizouEp) ?? AniDbIdParser.IdFromString(Path.GetFileName(info.Path));
-        if (string.IsNullOrWhiteSpace(epId))
+        var fileId = info.GetProviderId(ProviderIds.ShizouEp) ?? AniDbIdParser.IdFromString(Path.GetFileName(info.Path));
+        if (string.IsNullOrWhiteSpace(fileId))
             return new MetadataResult<Episode>();
 
-        var episode = await _plugin.ShizouHttpClient.AniDbEpisodesGetAsync(Convert.ToInt32(epId), cancellationToken).ConfigureAwait(false);
+        var animeId = Convert.ToInt32(info.SeriesProviderIds.GetValueOrDefault(ProviderIds.Shizou));
+        var episodes =
+            (await _plugin.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false))
+            .Where(ep => animeId == 0 || ep.AniDbAnimeId == animeId)
+            .OrderBy(ep => ep.EpisodeType).ThenBy(ep => ep.Number).ToList();
+        var episode = episodes.FirstOrDefault();
+
+        if (episode is null)
+            return new MetadataResult<Episode>();
+
+        var lastNum = episode.Number;
+        foreach (var ep in episodes.Where(ep => ep.EpisodeType == episode.EpisodeType && ep.Number != episode.Number)
+                     .Select(ep => ep.Number).Distinct().Order())
+            if (lastNum + 1 == ep)
+                lastNum++;
+            else
+                break;
 
         var result = new MetadataResult<Episode>()
         {
@@ -41,10 +57,9 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
                 PremiereDate = episode.AirDate?.UtcDateTime,
                 ProductionYear = episode.AirDate?.Year,
                 IndexNumber = episode.Number,
-                // TODO: Set based on episodes associated with file
-                IndexNumberEnd = null,
+                IndexNumberEnd = lastNum != episode.Number ? lastNum : null,
                 ParentIndexNumber = episode.EpisodeType is AniDbEpisodeEpisodeType.Episode ? null : 0,
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouEp, epId } }
+                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouEp, fileId } }
             }
         };
 

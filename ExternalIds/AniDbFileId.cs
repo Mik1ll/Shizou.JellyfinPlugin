@@ -5,12 +5,12 @@ using MediaBrowser.Model.Providers;
 
 namespace Shizou.JellyfinPlugin.ExternalIds;
 
-public class AniDbEpisodeId : IExternalId
+public class AniDbFileId : IExternalId
 {
     public bool Supports(IHasProviderIds item) => item is Episode;
 
-    public string ProviderName => "AniDB";
+    public string ProviderName => "AniDB File";
     public string Key => ProviderIds.ShizouEp;
-    public ExternalIdMediaType? Type => ExternalIdMediaType.Episode;
-    public string UrlFormatString => "https://anidb.net/episode/{0}";
+    public ExternalIdMediaType? Type => null;
+    public string UrlFormatString => "https://anidb.net/file/{0}";
 }

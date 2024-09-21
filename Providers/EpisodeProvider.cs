@@ -50,7 +50,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
                         AniDbEpisodeEpisodeType.Parody => "P",
                         AniDbEpisodeEpisodeType.Other => "O",
                         _ => ""
-                    } + $"{episode.Number}. {episode.TitleEnglish}",
+                    } + $"{episode.Number + (lastNum != episode.Number ? $"-{lastNum}" : "")}. {episode.TitleEnglish}",
                 Overview = episode.Summary,
                 RunTimeTicks = episode.DurationMinutes is not null ? TimeSpan.FromMinutes(episode.DurationMinutes.Value).Ticks : null,
                 OriginalTitle = episode.TitleOriginal,

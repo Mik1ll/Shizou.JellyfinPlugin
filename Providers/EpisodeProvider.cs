@@ -2,6 +2,7 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Microsoft.AspNetCore.Http;
 using Shizou.HttpClient;
 using Shizou.JellyfinPlugin.ExternalIds;
 
@@ -20,9 +21,23 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             return new MetadataResult<Episode>();
 
         var animeId = Convert.ToInt32(info.SeriesProviderIds.GetValueOrDefault(ProviderIds.Shizou));
-        var episodes =
-            (await _plugin.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false))
-            .Where(ep => animeId == 0 || ep.AniDbAnimeId == animeId)
+        List<AniDbEpisode> episodes;
+
+        await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            episodes =
+                (await _plugin.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false)).ToList();
+        }
+        catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
+        {
+            await _plugin.Unauthorized(cancellationToken).ConfigureAwait(false);
+            await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+            episodes =
+                (await _plugin.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false)).ToList();
+        }
+
+        episodes = episodes.Where(ep => animeId == 0 || ep.AniDbAnimeId == animeId)
             .OrderBy(ep => ep.EpisodeType).ThenBy(ep => ep.Number).ToList();
         var episode = episodes.FirstOrDefault();
 

@@ -2,6 +2,8 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Microsoft.AspNetCore.Http;
+using Shizou.HttpClient;
 using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
@@ -18,8 +20,19 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
-        var anime = await _plugin.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+        AniDbAnime anime;
 
+        await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            anime = await _plugin.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+        }
+        catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
+        {
+            await _plugin.Unauthorized(cancellationToken).ConfigureAwait(false);
+            await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+            anime = await _plugin.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+        }
 
         DateTimeOffset? airDateTime = anime.AirDate is not null && int.TryParse(anime.AirDate[..4], out var airY) &&
                                       int.TryParse(anime.AirDate[5..7], out var airM) &&

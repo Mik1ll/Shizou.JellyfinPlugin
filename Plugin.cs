@@ -1,11 +1,9 @@
 ﻿using System.Globalization;
-using System.Net;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using Microsoft.Extensions.Http.Resilience;
-using Polly;
+using Microsoft.Extensions.Logging;
 using Shizou.HttpClient;
 using Shizou.JellyfinPlugin.Configuration;
 
@@ -13,42 +11,16 @@ namespace Shizou.JellyfinPlugin;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
-#pragma warning disable EXTEXP0001
-    private readonly ResilienceHandler _httpHandler;
-#pragma warning restore EXTEXP0001
+    private readonly ILogger<Plugin> _logger;
+    private readonly SocketsHttpHandler _httpHandler;
 
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
-        var retryPipeline = new ResiliencePipelineBuilder<HttpResponseMessage>()
-            .AddRetry(new HttpRetryStrategyOptions()
-            {
-                MaxRetryAttempts = 1,
-                ShouldHandle = static args => ValueTask.FromResult(args is { Outcome.Result.StatusCode: HttpStatusCode.Unauthorized }),
-                OnRetry = async _ =>
-                {
-                    await _loggingInLock.WaitAsync().ConfigureAwait(false);
-                    try
-                    {
-                        _loggedIn = false;
-                        await LoginAsync(CancellationToken.None, true).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        _loggingInLock.Release();
-                    }
-                }
-            })
-            .Build();
-#pragma warning disable EXTEXP0001
-        _httpHandler = new ResilienceHandler(retryPipeline)
-#pragma warning restore EXTEXP0001
+        _logger = logger;
+        _httpHandler = new SocketsHttpHandler()
         {
-            InnerHandler = new SocketsHttpHandler()
-            {
-                PooledConnectionLifetime = TimeSpan.FromMinutes(2)
-            }
+            PooledConnectionLifetime = TimeSpan.FromMinutes(2)
         };
-
 
         HttpClient = new System.Net.Http.HttpClient(_httpHandler);
         HttpClient.BaseAddress = new Uri("https://localhost");
@@ -65,24 +37,50 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public System.Net.Http.HttpClient HttpClient { get; private set; }
     public ShizouHttpClient ShizouHttpClient { get; private set; }
 
+    private readonly SemaphoreSlim _loggingInLock = new(1, 1);
     private bool _loggedIn;
 
-    private readonly SemaphoreSlim _loggingInLock = new(1, 1);
-
-    public async Task LoginAsync(CancellationToken cancellationToken, bool insideLock = false)
+    public async Task LoginAsync(CancellationToken cancellationToken)
     {
-        if (!insideLock)
-            await _loggingInLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            if (!await _loggingInLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+            {
+                await _loggingInLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
             if (!_loggedIn)
+            {
+                _logger.LogInformation("Logging in...");
                 await ShizouHttpClient.AccountLoginAsync(Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation("Successfully logged in");
+            }
+
             _loggedIn = true;
         }
         finally
         {
-            if (!insideLock)
-                _loggingInLock.Release();
+            _loggingInLock.Release();
+        }
+    }
+
+    public async Task Unauthorized(CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!await _loggingInLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+            {
+                await _loggingInLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            _logger.LogWarning("Unauthorized, Logged Out!");
+            _loggedIn = false;
+        }
+        finally
+        {
+            _loggingInLock.Release();
         }
     }
 

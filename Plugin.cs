@@ -100,15 +100,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         ShizouHttpClient = new ShizouHttpClient(HttpClient);
     }
 
-    public IEnumerable<PluginPageInfo> GetPages()
-    {
-        return new[]
+    public IEnumerable<PluginPageInfo> GetPages() =>
+    [
+        new PluginPageInfo
         {
-            new PluginPageInfo
-            {
-                Name = Name,
-                EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace)
-            }
-        };
-    }
+            Name = Name,
+            EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace)
+        }
+    ];
 }

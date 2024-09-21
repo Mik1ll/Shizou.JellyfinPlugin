@@ -56,9 +56,9 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
                 OriginalTitle = episode.TitleOriginal,
                 PremiereDate = episode.AirDate?.UtcDateTime,
                 ProductionYear = episode.AirDate?.Year,
-                IndexNumber = episode.Number,
-                IndexNumberEnd = lastNum != episode.Number ? lastNum : null,
-                ParentIndexNumber = episode.EpisodeType is AniDbEpisodeEpisodeType.Episode ? null : 0,
+                IndexNumber = (int)episode.EpisodeType * 1000 + episode.Number,
+                IndexNumberEnd = lastNum != episode.Number ? (int)episode.EpisodeType * 1000 + lastNum : null,
+                ParentIndexNumber = episode.EpisodeType == AniDbEpisodeEpisodeType.Episode ? null : 0,
                 ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouEp, fileId } }
             }
         };

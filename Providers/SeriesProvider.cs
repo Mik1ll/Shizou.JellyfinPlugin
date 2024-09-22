@@ -10,8 +10,6 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
-    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
-
     public string Name => "Shizou";
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
@@ -22,16 +20,16 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
         AniDbAnime anime;
 
-        await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+        await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            anime = await _plugin.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+            anime = await Plugin.Instance.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
         }
         catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
         {
-            await _plugin.Unauthorized(cancellationToken).ConfigureAwait(false);
-            await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
-            anime = await _plugin.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+            await Plugin.Instance.Unauthorized(cancellationToken).ConfigureAwait(false);
+            await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
+            anime = await Plugin.Instance.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
         }
 
         DateTimeOffset? airDateTime = anime.AirDate is not null && int.TryParse(anime.AirDate[..4], out var airY) &&
@@ -67,7 +65,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        _plugin.HttpClient.GetAsync(url, cancellationToken);
+        Plugin.Instance.HttpClient.GetAsync(url, cancellationToken);
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<RemoteSearchResult>>([]);

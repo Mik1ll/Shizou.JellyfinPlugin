@@ -10,8 +10,6 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 {
-    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
-
     public string Name => "Shizou";
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
@@ -23,18 +21,20 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
         var animeId = Convert.ToInt32(info.SeriesProviderIds.GetValueOrDefault(ProviderIds.Shizou));
         List<AniDbEpisode> episodes;
 
-        await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+        await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             episodes =
-                (await _plugin.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false)).ToList();
+                (await Plugin.Instance.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false))
+                .ToList();
         }
         catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
         {
-            await _plugin.Unauthorized(cancellationToken).ConfigureAwait(false);
-            await _plugin.LoginAsync(cancellationToken).ConfigureAwait(false);
+            await Plugin.Instance.Unauthorized(cancellationToken).ConfigureAwait(false);
+            await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
             episodes =
-                (await _plugin.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false)).ToList();
+                (await Plugin.Instance.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false))
+                .ToList();
         }
 
         episodes = episodes.Where(ep => animeId == 0 || ep.AniDbAnimeId == animeId)
@@ -82,7 +82,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        _plugin.HttpClient.GetAsync(url, cancellationToken);
+        Plugin.Instance.HttpClient.GetAsync(url, cancellationToken);
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<RemoteSearchResult>>([]);

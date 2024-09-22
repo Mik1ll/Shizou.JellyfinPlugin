@@ -11,8 +11,6 @@ public class PluginConfiguration : BasePluginConfiguration
         get => _serverPort;
         set
         {
-            if (Plugin.Instance is null)
-                throw new InvalidOperationException("Plugin instance is null");
             Plugin.Instance.ChangeHttpClientPort(value);
             _serverPort = value;
         }

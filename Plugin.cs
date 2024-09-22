@@ -14,6 +14,9 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     private readonly ILogger<Plugin> _logger;
     private readonly SocketsHttpHandler _httpHandler;
 
+    private readonly SemaphoreSlim _loggingInLock = new(1, 1);
+    private bool _loggedIn;
+
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
         _logger = logger;
@@ -28,7 +31,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         Instance = this;
     }
 
-    public static Plugin? Instance { get; private set; }
+    public static Plugin Instance { get; private set; } = null!;
 
     public override string Name => "Shizou";
 
@@ -36,9 +39,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public System.Net.Http.HttpClient HttpClient { get; private set; }
     public ShizouHttpClient ShizouHttpClient { get; private set; }
-
-    private readonly SemaphoreSlim _loggingInLock = new(1, 1);
-    private bool _loggedIn;
 
     public async Task LoginAsync(CancellationToken cancellationToken)
     {

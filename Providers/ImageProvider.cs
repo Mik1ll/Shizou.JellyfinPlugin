@@ -9,8 +9,6 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class ImageProvider : IRemoteImageProvider
 {
-    private readonly Plugin _plugin = Plugin.Instance ?? throw new InvalidOperationException("Plugin instance is null");
-
     public bool Supports(BaseItem item) => item is Movie or Series or Season;
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => [ImageType.Primary];
 
@@ -30,10 +28,7 @@ public class ImageProvider : IRemoteImageProvider
         return Task.FromResult<IEnumerable<RemoteImageInfo>>(results);
     }
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-    {
-        return await _plugin.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
-    }
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) => await Plugin.Instance.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
     public string Name => "Shizou";
 }

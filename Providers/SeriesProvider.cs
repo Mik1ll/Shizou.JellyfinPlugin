@@ -2,8 +2,7 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using Microsoft.AspNetCore.Http;
-using Shizou.HttpClient;
+using Shizou.JellyfinPlugin.Extensions;
 using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
@@ -18,19 +17,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
-        AniDbAnime anime;
-
-        await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            anime = await Plugin.Instance.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
-        }
-        catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
-        {
-            await Plugin.Instance.Unauthorized(cancellationToken).ConfigureAwait(false);
-            await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
-            anime = await Plugin.Instance.ShizouHttpClient.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
-        }
+        var anime = await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
+            (sc, ct) => sc.AniDbAnimesGetAsync(Convert.ToInt32(animeId), ct),
+            cancellationToken).ConfigureAwait(false);
 
         DateTimeOffset? airDateTime = anime.AirDate is not null && int.TryParse(anime.AirDate[..4], out var airY) &&
                                       int.TryParse(anime.AirDate[5..7], out var airM) &&
@@ -65,7 +54,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        Plugin.Instance.HttpClient.GetAsync(url, cancellationToken);
+        throw new NotImplementedException();
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<RemoteSearchResult>>([]);

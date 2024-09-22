@@ -2,6 +2,7 @@
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using Microsoft.Extensions.Logging;
+using Shizou.JellyfinPlugin.Extensions;
 
 namespace Shizou.JellyfinPlugin.Services;
 
@@ -23,7 +24,8 @@ public class PlayedStateService
 
     public async Task UpdateStates(CancellationToken cancellationToken)
     {
-        var fileStates = await Plugin.Instance.ShizouHttpClient.FileWatchedStatesGetAllAsync(cancellationToken).ConfigureAwait(false);
+        var fileStates = await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
+            (sc, ct) => sc.FileWatchedStatesGetAllAsync(ct), cancellationToken).ConfigureAwait(false);
         var adminUser = _usermanager.Users.First(u => u.HasPermission(PermissionKind.IsAdministrator));
         var userData = _userDataManager.GetAllUserData(adminUser.Id);
         ;

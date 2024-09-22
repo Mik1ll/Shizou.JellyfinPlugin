@@ -2,8 +2,8 @@
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using Microsoft.AspNetCore.Http;
 using Shizou.HttpClient;
+using Shizou.JellyfinPlugin.Extensions;
 using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
@@ -19,23 +19,9 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             return new MetadataResult<Episode>();
 
         var animeId = Convert.ToInt32(info.SeriesProviderIds.GetValueOrDefault(ProviderIds.Shizou));
-        List<AniDbEpisode> episodes;
 
-        await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            episodes =
-                (await Plugin.Instance.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false))
-                .ToList();
-        }
-        catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
-        {
-            await Plugin.Instance.Unauthorized(cancellationToken).ConfigureAwait(false);
-            await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
-            episodes =
-                (await Plugin.Instance.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken).ConfigureAwait(false))
-                .ToList();
-        }
+        var episodes = await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
+            (sc, ct) => sc.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), ct), cancellationToken).ConfigureAwait(false);
 
         episodes = episodes.Where(ep => animeId == 0 || ep.AniDbAnimeId == animeId)
             .OrderBy(ep => ep.EpisodeType).ThenBy(ep => ep.Number).ToList();
@@ -82,7 +68,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        Plugin.Instance.HttpClient.GetAsync(url, cancellationToken);
+        throw new NotImplementedException();
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<RemoteSearchResult>>([]);

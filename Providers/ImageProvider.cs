@@ -4,6 +4,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Shizou.JellyfinPlugin.Extensions;
 
 namespace Shizou.JellyfinPlugin.Providers;
 
@@ -28,7 +29,8 @@ public class ImageProvider : IRemoteImageProvider
         return Task.FromResult<IEnumerable<RemoteImageInfo>>(results);
     }
 
-    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) => await Plugin.Instance.HttpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
+    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
+        Plugin.Instance.ShizouHttpClient.WithLoginRetry((_, ct) => Plugin.Instance.HttpClient.GetAsync(url, ct), cancellationToken);
 
     public string Name => "Shizou";
 }

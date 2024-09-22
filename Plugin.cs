@@ -15,7 +15,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     private readonly SocketsHttpHandler _httpHandler;
 
     private readonly SemaphoreSlim _loggingInLock = new(1, 1);
-    private bool _loggedIn;
+    private DateTimeOffset? _lastLogin;
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
@@ -47,36 +47,20 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             if (!await _loggingInLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
             {
                 await _loggingInLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogTrace("Obtained login lock after waiting, skipping login");
                 return;
             }
 
-            if (!_loggedIn)
+            if (_lastLogin is not null && DateTimeOffset.Now < _lastLogin + TimeSpan.FromSeconds(10))
             {
-                _logger.LogInformation("Logging in...");
-                await ShizouHttpClient.AccountLoginAsync(Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
-                _logger.LogInformation("Successfully logged in");
-            }
-
-            _loggedIn = true;
-        }
-        finally
-        {
-            _loggingInLock.Release();
-        }
-    }
-
-    public async Task Unauthorized(CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (!await _loggingInLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
-            {
-                await _loggingInLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogWarning("Logged in less than 10 seconds ago, not retrying");
                 return;
             }
 
-            _logger.LogWarning("Unauthorized, Logged Out!");
-            _loggedIn = false;
+            _logger.LogInformation("Logging in...");
+            await ShizouHttpClient.AccountLoginAsync(Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
+            _lastLogin = DateTimeOffset.Now;
+            _logger.LogInformation("Successfully logged in");
         }
         finally
         {

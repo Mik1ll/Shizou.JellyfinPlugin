@@ -23,7 +23,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        Plugin.Instance.HttpClient.GetAsync(url, cancellationToken);
+        throw new NotImplementedException();
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeasonInfo searchInfo, CancellationToken cancellationToken) =>
         Task.FromResult<IEnumerable<RemoteSearchResult>>([]);

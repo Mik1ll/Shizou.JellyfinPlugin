@@ -10,23 +10,39 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class ImageProvider : IRemoteImageProvider
 {
-    public bool Supports(BaseItem item) => item is Movie or Series or Season;
+    public bool Supports(BaseItem item) => item is Movie or Series or Season or Episode;
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => [ImageType.Primary];
 
-    public Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
+    public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
     {
-        var results = new List<RemoteImageInfo>();
         var animeId = item.GetProviderId(ProviderIds.Shizou);
-        if (string.IsNullOrWhiteSpace(animeId))
-            return Task.FromResult<IEnumerable<RemoteImageInfo>>(results);
-
-        results.Add(new RemoteImageInfo()
+        var fileId = item.GetProviderId(ProviderIds.ShizouEp);
+        if (!string.IsNullOrWhiteSpace(fileId))
         {
-            ProviderName = Name,
-            Url = $"api/Images/AnimePosters/{animeId}"
-        });
+            var episodes = await Plugin.Instance.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken)
+                .ConfigureAwait(false);
+            var episodeId = episodes.FirstOrDefault()?.Id;
+            if (episodeId is not null)
+                return
+                [
+                    new RemoteImageInfo()
+                    {
+                        ProviderName = Name,
+                        Url = $"api/Images/EpisodeThumbnails/{episodeId}"
+                    }
+                ];
+        }
 
-        return Task.FromResult<IEnumerable<RemoteImageInfo>>(results);
+        if (!string.IsNullOrWhiteSpace(animeId))
+            return
+            [
+                new RemoteImageInfo()
+                {
+                    ProviderName = Name,
+                    Url = $"api/Images/AnimePosters/{animeId}"
+                }
+            ];
+        return [];
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

@@ -19,4 +19,19 @@ public static class ShizouHttpClientExtensions
             return await action(client, cancellationToken).ConfigureAwait(false);
         }
     }
+
+    public static async Task WithLoginRetry(this ShizouHttpClient client,
+        Func<ShizouHttpClient, CancellationToken, Task> action,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await action(client, cancellationToken).ConfigureAwait(false);
+        }
+        catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
+        {
+            await Plugin.Instance.LoginAsync(cancellationToken).ConfigureAwait(false);
+            await action(client, cancellationToken).ConfigureAwait(false);
+        }
+    }
 }

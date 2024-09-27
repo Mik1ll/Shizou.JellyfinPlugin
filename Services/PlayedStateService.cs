@@ -22,7 +22,7 @@ public class PlayedStateService
         _libraryManager = libraryManager;
     }
 
-    public async Task UpdateStates(CancellationToken cancellationToken)
+    public async Task UpdateStates(CancellationToken cancellationToken, IProgress<double>? progress = null)
     {
         _logger.LogInformation("Starting watched state sync");
         var fileStates = (await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
@@ -39,8 +39,9 @@ public class PlayedStateService
             IsVirtualItem = false,
             HasAnyProviderId = new Dictionary<string, string>() { { ProviderIds.ShizouEp, string.Empty } }
         });
-        foreach (var vid in videos)
+        for (var idx = 0; idx < videos.Count; idx++)
         {
+            var vid = videos[idx];
             if (!fileStates.TryGetValue(Convert.ToInt32(vid.ProviderIds[ProviderIds.ShizouEp]), out var fileState))
                 continue;
             var userDataItem = _userDataManager.GetUserData(adminUser, vid);
@@ -53,6 +54,8 @@ public class PlayedStateService
                 userDataItem.Played = fileState.Watched;
                 _userDataManager.SaveUserData(adminUser, vid, userDataItem, UserDataSaveReason.TogglePlayed, cancellationToken);
             }
+
+            progress?.Report((idx + 1.0) / videos.Count);
         }
     }
 }

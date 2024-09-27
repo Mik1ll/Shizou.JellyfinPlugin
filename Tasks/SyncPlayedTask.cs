@@ -9,7 +9,7 @@ public class SyncPlayedTask : IScheduledTask, IConfigurableScheduledTask
 
     public SyncPlayedTask(PlayedStateService playedStateService) => _playedStateService = playedStateService;
 
-    public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) => _playedStateService.UpdateStates(cancellationToken);
+    public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) => _playedStateService.UpdateStates(cancellationToken, progress);
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers() => [];
 

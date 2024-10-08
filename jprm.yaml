@@ -1,0 +1,11 @@
+name: Shizou
+guid: 1e81a180-292d-4523-9d57-d03f5221c2f2
+owner: Mik1ll
+description: 'This is the Description
+
+  '
+overview: Populate metadata/view states using the local Shizou server
+category: metadata
+artifacts:
+  - Shizou.JellyfinPlugin.dll
+  - Shizou.HttpClient.dll

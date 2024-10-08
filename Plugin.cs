@@ -16,6 +16,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     private readonly SemaphoreSlim _loggingInLock = new(1, 1);
     private DateTimeOffset? _lastLogin;
+    private System.Net.Http.HttpClient? _httpClient;
+    private ShizouHttpClient? _shizouHttpClient;
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
@@ -24,8 +26,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(2)
         };
-        HttpClient = new System.Net.Http.HttpClient(_httpHandler, false);
-        ShizouHttpClient = new ShizouHttpClient(HttpClient);
         Instance = this;
     }
 
@@ -35,8 +35,23 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public override Guid Id => Guid.Parse("1E81A180-292D-4523-9D57-D03F5221C2F2");
 
-    public System.Net.Http.HttpClient HttpClient { get; private set; }
-    public ShizouHttpClient ShizouHttpClient { get; private set; }
+    public System.Net.Http.HttpClient HttpClient
+    {
+        get
+        {
+            GetHttpClient();
+            return _httpClient!;
+        }
+    }
+
+    public ShizouHttpClient ShizouHttpClient
+    {
+        get
+        {
+            GetHttpClient();
+            return _shizouHttpClient!;
+        }
+    }
 
     public async Task LoginAsync(CancellationToken cancellationToken)
     {
@@ -66,14 +81,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
     }
 
-    public void NewHttpClient(Uri baseAddress)
-    {
-        HttpClient.Dispose();
-        HttpClient = new System.Net.Http.HttpClient(_httpHandler, false);
-        HttpClient.BaseAddress = baseAddress;
-        ShizouHttpClient = new ShizouHttpClient(HttpClient);
-    }
-
     public IEnumerable<PluginPageInfo> GetPages() =>
     [
         new()
@@ -82,4 +89,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace)
         }
     ];
+
+    private void GetHttpClient()
+    {
+        var configBaseAddr = new Uri(Configuration.ServerBaseAddress);
+        if (_httpClient is not null && _shizouHttpClient is not null && configBaseAddr == _httpClient.BaseAddress)
+            return;
+        _httpClient?.Dispose();
+        _httpClient = new System.Net.Http.HttpClient(_httpHandler, false);
+        _httpClient.BaseAddress = configBaseAddr;
+        _shizouHttpClient = new ShizouHttpClient(_httpClient);
+    }
 }

@@ -5,7 +5,7 @@
     "description": "This is the Description\n",
     "overview": "Populate metadata/view states using the local Shizou server",
     "owner": "Mik1ll",
-    "category": "metadata",
+    "category": "Metadata",
     "versions": [
       {
         "version": "1.0.0.0",

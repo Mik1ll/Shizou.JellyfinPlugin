@@ -5,7 +5,7 @@ description: 'This is the Description
 
   '
 overview: Populate metadata/view states using the local Shizou server
-category: metadata
+category: Metadata
 artifacts:
   - Shizou.JellyfinPlugin.dll
   - Shizou.HttpClient.dll

@@ -54,7 +54,8 @@ public class PlayedStateService : IDisposable
 
                 _logger.LogInformation("Setting played state of item: {PlayedState} => {NewPlayedState}", userDataItem.Played, fileState.Watched);
                 userDataItem.Played = fileState.Watched;
-                _userDataManager.SaveUserData(adminUser, vid, userDataItem, UserDataSaveReason.TogglePlayed, cancellationToken);
+                // Don't use toggle played state save reason here, don't want to send useless updates to server
+                _userDataManager.SaveUserData(adminUser, vid, userDataItem, UserDataSaveReason.UpdateUserData, cancellationToken);
             }
 
             progress?.Report((idx + 1.0) / videos.Count);

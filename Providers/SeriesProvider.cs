@@ -1,4 +1,5 @@
-﻿using MediaBrowser.Controller.Entities.TV;
+﻿using System.Globalization;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
@@ -21,30 +22,34 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
             (sc, ct) => sc.AniDbAnimesGetAsync(Convert.ToInt32(animeId), ct),
             cancellationToken).ConfigureAwait(false);
 
-        DateTimeOffset? airDateTime = anime.AirDate is not null && int.TryParse(anime.AirDate[..4], out var airY) &&
-                                      int.TryParse(anime.AirDate[5..7], out var airM) &&
-                                      int.TryParse(anime.AirDate[8..10], out var airD)
-            ? new DateTimeOffset(new DateTime(airY, airM, airD), TimeSpan.FromHours(9))
-            : null;
-        DateTimeOffset? endDateTime = anime.EndDate is not null && int.TryParse(anime.EndDate[..4], out var endY) &&
-                                      int.TryParse(anime.EndDate[5..7], out var endM) &&
-                                      int.TryParse(anime.EndDate[8..10], out var endD)
-            ? new DateTimeOffset(new DateTime(endY, endM, endD), TimeSpan.FromHours(9))
-            : null;
+
+        DateTimeOffset? airDateOffset, endDateOffset;
+        {
+            if (!DateTime.TryParseExact(anime.AirDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var airDateTime))
+                if (!DateTime.TryParseExact(anime.AirDate, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out airDateTime))
+                    DateTime.TryParseExact(anime.AirDate, "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out airDateTime);
+            airDateOffset = airDateTime == DateTime.MinValue ? null : new DateTimeOffset(airDateTime, TimeSpan.FromHours(9));
+
+            if (!DateTime.TryParseExact(anime.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDateTime))
+                if (!DateTime.TryParseExact(anime.EndDate, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out endDateTime))
+                    DateTime.TryParseExact(anime.EndDate, "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out endDateTime);
+            endDateOffset = endDateTime == DateTime.MinValue ? null : new DateTimeOffset(endDateTime, TimeSpan.FromHours(9));
+        }
+
         var result = new MetadataResult<Series>
         {
             Item = new Series
             {
                 Name = anime.TitleTranscription,
                 OriginalTitle = anime.TitleOriginal,
-                PremiereDate = airDateTime?.UtcDateTime,
-                EndDate = endDateTime?.UtcDateTime,
+                PremiereDate = airDateOffset?.UtcDateTime,
+                EndDate = endDateOffset?.UtcDateTime,
                 Overview = anime.Description,
                 HomePageUrl = $"https://anidb.net/anime/{animeId}",
-                ProductionYear = airDateTime?.Year,
-                Status = endDateTime <= DateTime.Now ? SeriesStatus.Ended :
-                    airDateTime > DateTime.Now ? SeriesStatus.Unreleased :
-                    airDateTime is not null && endDateTime is not null ? SeriesStatus.Continuing : null,
+                ProductionYear = airDateOffset?.Year,
+                Status = airDateOffset <= DateTime.Now ? SeriesStatus.Ended :
+                    airDateOffset > DateTime.Now ? SeriesStatus.Unreleased :
+                    airDateOffset is not null && endDateOffset is not null ? SeriesStatus.Continuing : null,
                 ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId } }
             },
             HasMetadata = true

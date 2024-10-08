@@ -4,15 +4,15 @@ namespace Shizou.JellyfinPlugin.Configuration;
 
 public class PluginConfiguration : BasePluginConfiguration
 {
-    private int _serverPort = 443;
+    private string _serverBaseAddress = "http://localhost";
 
-    public int ServerPort
+    public string ServerBaseAddress
     {
-        get => _serverPort;
+        get => _serverBaseAddress;
         set
         {
-            Plugin.Instance.ChangeHttpClientPort(value);
-            _serverPort = value;
+            Plugin.Instance.NewHttpClient(new Uri(value));
+            _serverBaseAddress = value;
         }
     }
 

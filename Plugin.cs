@@ -25,7 +25,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             PooledConnectionLifetime = TimeSpan.FromMinutes(2)
         };
         HttpClient = new System.Net.Http.HttpClient(_httpHandler, false);
-        HttpClient.BaseAddress = new Uri("https://localhost");
         ShizouHttpClient = new ShizouHttpClient(HttpClient);
         Instance = this;
     }
@@ -67,17 +66,11 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
     }
 
-    public void ChangeHttpClientPort(int port)
+    public void NewHttpClient(Uri baseAddress)
     {
-        if (port == HttpClient.BaseAddress?.Port)
-            return;
-        var uri = new UriBuilder(HttpClient.BaseAddress!)
-        {
-            Port = port
-        }.Uri;
         HttpClient.Dispose();
         HttpClient = new System.Net.Http.HttpClient(_httpHandler, false);
-        HttpClient.BaseAddress = uri;
+        HttpClient.BaseAddress = baseAddress;
         ShizouHttpClient = new ShizouHttpClient(HttpClient);
     }
 

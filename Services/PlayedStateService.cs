@@ -9,6 +9,7 @@ namespace Shizou.JellyfinPlugin.Services;
 
 public class PlayedStateService : IDisposable
 {
+    private static readonly SemaphoreSlim ThrottleConcurrentConnections = new(10, 10);
     private readonly ILogger<PlayedStateService> _logger;
     private readonly IUserManager _usermanager;
     private readonly IUserDataManager _userDataManager;
@@ -21,29 +22,6 @@ public class PlayedStateService : IDisposable
         _userDataManager = userDataManager;
         _libraryManager = libraryManager;
         _userDataManager.UserDataSaved += OnUserDataSaved;
-    }
-
-    private async void OnUserDataSaved(object? sender, UserDataSaveEventArgs e)
-    {
-        if (e.SaveReason != UserDataSaveReason.TogglePlayed ||
-            e.Item is not Video { MediaType: MediaType.Video, IsFolder: false, SourceType: SourceType.Library } vid ||
-            !vid.ProviderIds.ContainsKey(ProviderIds.ShizouEp)) return;
-        var adminUser = _usermanager.Users.FirstOrDefault(u => u.HasPermission(PermissionKind.IsAdministrator));
-
-        if (adminUser is null || e.UserId != adminUser.Id || !int.TryParse(vid.ProviderIds[ProviderIds.ShizouEp], out var aniDbFileId))
-            return;
-        _logger.LogInformation("Updating Shizou watched state for AniDB file ID: {AniDbFileId}, {NewPlayedState}", aniDbFileId, e.UserData.Played);
-        try
-        {
-            await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
-                (cl, ct) => e.UserData.Played ? cl.AniDbFilesMarkWatchedAsync(aniDbFileId, ct) : cl.AniDbFilesMarkUnwatchedAsync(aniDbFileId, ct),
-                CancellationToken.None).ConfigureAwait(false);
-        }
-        catch (Exception ex) // Throws fatal error if not caught
-        {
-            _logger.LogError("Failed to update played state for AniDB file ID: {AniDbFileId}, {NewPlayedState}. Error: {ErrorMsg}", aniDbFileId,
-                e.UserData.Played, ex.Message);
-        }
     }
 
     public async Task UpdateStates(CancellationToken cancellationToken, IProgress<double>? progress = null)
@@ -86,5 +64,33 @@ public class PlayedStateService : IDisposable
     public void Dispose()
     {
         _userDataManager.UserDataSaved -= OnUserDataSaved;
+    }
+
+    private async void OnUserDataSaved(object? sender, UserDataSaveEventArgs e)
+    {
+        if (e.SaveReason != UserDataSaveReason.TogglePlayed ||
+            e.Item is not Video { MediaType: MediaType.Video, IsFolder: false, SourceType: SourceType.Library } vid ||
+            !vid.ProviderIds.ContainsKey(ProviderIds.ShizouEp)) return;
+        var adminUser = _usermanager.Users.FirstOrDefault(u => u.HasPermission(PermissionKind.IsAdministrator));
+
+        if (adminUser is null || e.UserId != adminUser.Id || !int.TryParse(vid.ProviderIds[ProviderIds.ShizouEp], out var aniDbFileId))
+            return;
+        _logger.LogInformation("Updating Shizou watched state for AniDB file ID: {AniDbFileId}, {NewPlayedState}", aniDbFileId, e.UserData.Played);
+        await ThrottleConcurrentConnections.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
+                (cl, ct) => e.UserData.Played ? cl.AniDbFilesMarkWatchedAsync(aniDbFileId, ct) : cl.AniDbFilesMarkUnwatchedAsync(aniDbFileId, ct),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception ex) // Throws fatal error if not caught
+        {
+            _logger.LogError("Failed to update played state for AniDB file ID: {AniDbFileId}, {NewPlayedState}. Error: {ErrorMsg}", aniDbFileId,
+                e.UserData.Played, ex.Message);
+        }
+        finally
+        {
+            ThrottleConcurrentConnections.Release();
+        }
     }
 }

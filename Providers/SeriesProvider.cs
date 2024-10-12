@@ -51,6 +51,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                     airDateOffset > DateTime.Now ? SeriesStatus.Unreleased :
                     airDateOffset is not null && endDateOffset is not null ? SeriesStatus.Continuing : null,
                 CommunityRating = anime.Rating,
+                Tags = anime.Tags.ToArray(),
                 ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId } }
             },
             HasMetadata = true

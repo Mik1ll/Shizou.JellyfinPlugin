@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using Jellyfin.Data.Enums;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -56,14 +58,23 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
             },
             HasMetadata = true
         };
-        AddPeople(result);
+        await AddPeople(result, Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
 
         return result;
     }
 
-    private void AddPeople(MetadataResult<Series> result)
+    private async Task AddPeople(MetadataResult<Series> result, int animeId, CancellationToken cancellationToken)
     {
         result.ResetPeople();
+        var credits = await Plugin.Instance.ShizouHttpClient.AniDbCreditsByAniDbAnimeIdAsync(animeId, cancellationToken).ConfigureAwait(false);
+        foreach (var credit in credits)
+            if (credit.AniDbCharacter is not null)
+                result.AddPerson(new PersonInfo()
+                {
+                    Name = credit.AniDbCreator.Name,
+                    Role = credit.AniDbCharacter.Name,
+                    Type = PersonKind.Actor
+                });
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

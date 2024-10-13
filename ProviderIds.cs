@@ -4,4 +4,5 @@ public class ProviderIds
 {
     public const string Shizou = "Shizou";
     public const string ShizouEp = "ShizouEp";
+    public const string ShizouCreator = "ShizouCreator";
 }

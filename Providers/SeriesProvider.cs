@@ -73,7 +73,8 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 {
                     Name = credit.AniDbCreator.Name,
                     Role = credit.AniDbCharacter.Name,
-                    Type = PersonKind.Actor
+                    Type = PersonKind.Actor,
+                    ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } }
                 });
     }
 

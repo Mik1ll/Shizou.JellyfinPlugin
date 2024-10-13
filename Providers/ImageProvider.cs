@@ -10,13 +10,14 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class ImageProvider : IRemoteImageProvider
 {
-    public bool Supports(BaseItem item) => item is Movie or Series or Season or Episode;
+    public bool Supports(BaseItem item) => item is Movie or Series or Season or Episode or Person;
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => [ImageType.Primary];
 
     public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
     {
         var animeId = item.GetProviderId(ProviderIds.Shizou);
         var fileId = item.GetProviderId(ProviderIds.ShizouEp);
+        var creatorId = item.GetProviderId(ProviderIds.ShizouCreator);
         if (!string.IsNullOrWhiteSpace(fileId))
         {
             var episodes = await Plugin.Instance.ShizouHttpClient.AniDbEpisodesByAniDbFileIdAsync(Convert.ToInt32(fileId), cancellationToken)
@@ -40,6 +41,16 @@ public class ImageProvider : IRemoteImageProvider
                 {
                     ProviderName = Name,
                     Url = $"api/Images/AnimePosters/{animeId}"
+                }
+            ];
+
+        if (!string.IsNullOrWhiteSpace(creatorId))
+            return
+            [
+                new RemoteImageInfo()
+                {
+                    ProviderName = Name,
+                    Url = $"api/Images/CreatorImages/{creatorId}"
                 }
             ];
         return [];

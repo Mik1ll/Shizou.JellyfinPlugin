@@ -56,8 +56,14 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
             },
             HasMetadata = true
         };
+        AddPeople(result);
 
         return result;
+    }
+
+    private void AddPeople(MetadataResult<Series> result)
+    {
+        result.ResetPeople();
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

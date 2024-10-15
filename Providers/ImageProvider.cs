@@ -11,7 +11,7 @@ namespace Shizou.JellyfinPlugin.Providers;
 public class ImageProvider : IRemoteImageProvider
 {
     public bool Supports(BaseItem item) => item is Movie or Series or Season or Episode or Person;
-    public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => [ImageType.Primary, ImageType.Thumb];
+    public IEnumerable<ImageType> GetSupportedImages(BaseItem item) => [ImageType.Primary];
 
     public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
     {

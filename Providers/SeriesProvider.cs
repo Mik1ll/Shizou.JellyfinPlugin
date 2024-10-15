@@ -68,14 +68,31 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         result.ResetPeople();
         var credits = await Plugin.Instance.ShizouHttpClient.AniDbCreditsByAniDbAnimeIdAsync(animeId, cancellationToken).ConfigureAwait(false);
         foreach (var credit in credits)
-            if (credit.AniDbCharacter is not null)
-                result.AddPerson(new PersonInfo()
-                {
-                    Name = credit.AniDbCreator.Name,
-                    Role = credit.AniDbCharacter.Name,
-                    Type = PersonKind.Actor,
-                    ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } }
-                });
+            result.AddPerson(new PersonInfo()
+            {
+                Name = credit.AniDbCreator.Name,
+                Role = credit.AniDbCharacter?.Name ?? credit.Role,
+                Type = credit.AniDbCharacterId is null ? PersonKind.Unknown : PersonKind.Actor,
+                SortOrder = credit.AniDbCharacterId is not null
+                    ? credit.Role switch
+                    {
+                        var r when r.Contains("Main", StringComparison.OrdinalIgnoreCase) => 0,
+                        var r when r.Contains("Secondary", StringComparison.OrdinalIgnoreCase) => 1,
+                        var r when r.Contains("appears", StringComparison.OrdinalIgnoreCase) => 2,
+                        _ => 3
+                    }
+                    : credit.Role switch
+                    {
+                        var r when r.Contains("Original Work", StringComparison.OrdinalIgnoreCase) => 4,
+                        var r when r.Contains("Direction", StringComparison.OrdinalIgnoreCase) => 5,
+                        var r when r.Contains("Storyboard", StringComparison.OrdinalIgnoreCase) => 6,
+                        var r when r.Contains("Series Composition", StringComparison.OrdinalIgnoreCase) => 6,
+                        var r when r.Contains("Episode Direction", StringComparison.OrdinalIgnoreCase) => 7,
+                        var r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
+                        _ => int.MaxValue
+                    },
+                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } }
+            });
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

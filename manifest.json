@@ -8,12 +8,20 @@
         "category": "Metadata",
         "versions": [
             {
-              "version": "1.2.4.0",
+              "version": "1.2.5.0",
               "changelog": "",
               "targetAbi": "10.9.9.0",
-              "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.4/shizou_1.2.4.0.zip",
-              "checksum": "132be52b9fa2189fb06703cd0d9e01f6",
-              "timestamp": "2024-10-15T14:06:44Z"
+              "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.5/shizou_1.2.5.0.zip",
+              "checksum": "b827ae950096bc81cc762c6f2060fa21",
+              "timestamp": "2024-10-15T14:57:19Z"
+            },
+          {
+            "version": "1.2.4.0",
+            "changelog": "",
+            "targetAbi": "10.9.9.0",
+            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.4/shizou_1.2.4.0.zip",
+            "checksum": "132be52b9fa2189fb06703cd0d9e01f6",
+            "timestamp": "2024-10-15T14:06:44Z"
             },
           {
             "version": "1.2.3.0",

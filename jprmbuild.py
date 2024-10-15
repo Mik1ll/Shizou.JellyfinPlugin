@@ -2,6 +2,7 @@ import yaml
 import subprocess
 import re
 import pathlib
+import multiprocessing
 
 git_ver_p = subprocess.run(
     [
@@ -55,6 +56,10 @@ cfg["changelog"] = ""
 with open(metadata_file, "w") as metadata:
     yaml.safe_dump(cfg, metadata, sort_keys=False)
 
+try:
+    cpu_count = str(multiprocessing.cpu_count())
+except:
+    cpu_count = "1"
 
 jprm_p = subprocess.run(
     [
@@ -65,6 +70,8 @@ jprm_p = subprocess.run(
         "build",
         "--dotnet-framework",
         framework,
+        "--max-cpu-count",
+        cpu_count,
         "--version",
         git_ver,
         "--output",

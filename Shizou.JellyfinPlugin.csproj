@@ -11,10 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="Jellyfin.Controller" Version="10.9.9" ExcludeAssets="runtime"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Shizou.HttpClient\Shizou.HttpClient.csproj"/>
+        <PackageReference Include="Shizou.HttpClient" Version="1.0.0"/>
     </ItemGroup>
 
     <ItemGroup>

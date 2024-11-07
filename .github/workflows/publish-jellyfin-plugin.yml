@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: read
     steps:
     - uses: actions/checkout@v4
       with:

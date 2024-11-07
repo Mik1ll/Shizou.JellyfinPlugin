@@ -41,4 +41,4 @@ jobs:
         git add Repository/manifest.json
         git commit -m "Add $GITHUB_REF_NAME to Repository"
         git push -u origin "$branch_name"
-        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER"
+        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER" -f

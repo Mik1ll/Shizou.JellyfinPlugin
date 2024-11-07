@@ -39,6 +39,7 @@ jobs:
         branch_name="update-repo-$GITHUB_REF_NAME"
         git checkout -b "$branch_name"
         git add Repository/manifest.json
-        git commit -m "Add $GITHUB_REF_NAME to Repository"
+        commit_msg="Add $GITHUB_REF_NAME to Repository"
+        git commit -m "$commit_msg"
         git push -u origin "$branch_name"
-        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER" -f
+        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER" --title "$commit_msg" --base master

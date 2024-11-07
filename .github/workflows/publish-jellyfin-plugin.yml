@@ -42,4 +42,4 @@ jobs:
         commit_msg="Add $GITHUB_REF_NAME to Repository"
         git commit -m "$commit_msg"
         git push -u origin "$branch_name"
-        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER" --title "$commit_msg" --base master
+        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER" --title "$commit_msg" --body "" --base master

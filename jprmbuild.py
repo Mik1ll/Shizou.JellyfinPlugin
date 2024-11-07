@@ -1,14 +1,29 @@
+import urllib.parse
 import yaml
 import subprocess
 import re
 import pathlib
 import multiprocessing
+import argparse
+import urllib
+
+parser = argparse.ArgumentParser()
+parser.add_argument("GITHUB_REPO", help="The github repo the release will be hosted on")
+args = parser.parse_args()
+
+if str(args.GITHUB_REPO).startswith("https://"):
+    repo_url = args.GITHUB_REPO
+elif str(args.GITHUB_REPO).startswith("github.com"):
+    repo_url = f"https://{args.GITHUB_REPO}"
+else:
+    repo_url = urllib.parse.urljoin("https://github.com", args.GITHUB_REPO)
+
 
 git_ver_p = subprocess.run(
     [
         "git",
         "describe",
-        "--match=JellyfinPlugin/v[0-9]*.[0-9]*.[0-9]*",
+        "--match=v[0-9]*.[0-9]*.[0-9]*",
         "--tags",
         "--abbrev=0",
     ],
@@ -19,7 +34,7 @@ git_ver_p = subprocess.run(
 if git_ver_p.returncode:
     exit(f"Git describe returned error code: {git_ver_p.returncode} {git_ver_p.stderr}")
 git_tag = git_ver_p.stdout.strip()
-git_ver = git_tag[git_tag.rindex("/v") + 2 :]
+git_ver = git_tag[1:]
 
 artifact_dir = pathlib.Path("artifacts")
 artifact_dir.mkdir(exist_ok=True)
@@ -97,8 +112,9 @@ package_filename = pathlib.Path(package_zip).name
 
 print("Package path: " + package_zip)
 
-repo_url = "https://github.com/Mik1ll/Shizou"
-package_url = f"{repo_url}/releases/download/{git_tag}/{package_filename}"
+package_url = f"{repo_url.rstrip('/')}/releases/download/{git_tag}/{package_filename}"
+
+print("Package url: " + package_url)
 
 manifest_file = "Repository/manifest.json"
 

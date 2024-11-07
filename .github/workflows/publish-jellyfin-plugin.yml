@@ -5,7 +5,7 @@ on:
     - v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
-  publish-nupkg:
+  publish-jellyfin-plugin:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -16,6 +16,11 @@ jobs:
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - name: Add Source Credential
+      run: |
+        dotnet nuget remove source "github.com/$GITHUB_REPOSITORY_OWNER"
+        dotnet nuget add source --username $GITHUB_REPOSITORY_OWNER --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text \
+          --name "github.com/$GITHUB_REPOSITORY_OWNER" "https://nuget.pkg.github.com/$GITHUB_REPOSITORY_OWNER/index.json"
     - name: Install jprm
       run: pip install jprm~=1.1
     - name: Build & Package

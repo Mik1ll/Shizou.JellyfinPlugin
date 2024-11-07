@@ -1,0 +1,33 @@
+name: Publish Jellyfin Plugin
+on:
+  push:
+    tags:
+    - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  publish-nupkg:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Install jprm
+      run: pip install jprm~=1.1
+    - name: Build & Package
+      run: python3 jprmbuild.py "$GITHUB_REPOSITORY"
+    - name: Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release create "$GITHUB_REF_NAME" ./artifacts/*.zip --generate-notes --verify-tag
+    - name: Push Repository Index
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add Repository/manifest.json
+        git commit -m "Add $GITHUB_REF_NAME to Repository"
+        git push

@@ -8,78 +8,86 @@
         "category": "Metadata",
         "versions": [
             {
-              "version": "1.2.5.0",
-              "changelog": "",
-              "targetAbi": "10.9.9.0",
-              "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.5/shizou_1.2.5.0.zip",
-              "checksum": "b827ae950096bc81cc762c6f2060fa21",
-              "timestamp": "2024-10-15T14:57:19Z"
+                "version": "1.3.10.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou.JellyfinPlugin/releases/download/v1.3.10/shizou_1.3.10.0.zip",
+                "checksum": "684037a5f4fab900b10cc0cdf9c01820",
+                "timestamp": "2024-11-07T18:00:58Z"
             },
-          {
-            "version": "1.2.4.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.4/shizou_1.2.4.0.zip",
-            "checksum": "132be52b9fa2189fb06703cd0d9e01f6",
-            "timestamp": "2024-10-15T14:06:44Z"
+            {
+                "version": "1.2.5.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.5/shizou_1.2.5.0.zip",
+                "checksum": "b827ae950096bc81cc762c6f2060fa21",
+                "timestamp": "2024-10-15T14:57:19Z"
             },
-          {
-            "version": "1.2.3.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.3/shizou_1.2.3.0.zip",
-            "checksum": "c79fcef23c43b68e881832591fc84a0d",
-            "timestamp": "2024-10-15T13:57:02Z"
+            {
+                "version": "1.2.4.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.4/shizou_1.2.4.0.zip",
+                "checksum": "132be52b9fa2189fb06703cd0d9e01f6",
+                "timestamp": "2024-10-15T14:06:44Z"
             },
-          {
-            "version": "1.2.2.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.2/shizou_1.2.2.0.zip",
-            "checksum": "609faf892556be0762096fad7fd54851",
-            "timestamp": "2024-10-15T12:58:01Z"
+            {
+                "version": "1.2.3.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.3/shizou_1.2.3.0.zip",
+                "checksum": "c79fcef23c43b68e881832591fc84a0d",
+                "timestamp": "2024-10-15T13:57:02Z"
             },
-          {
-            "version": "1.2.1.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.1/shizou_1.2.1.0.zip",
-            "checksum": "34fcb6421aa5ac2af862453c103844d2",
-            "timestamp": "2024-10-15T12:31:26Z"
+            {
+                "version": "1.2.2.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.2/shizou_1.2.2.0.zip",
+                "checksum": "609faf892556be0762096fad7fd54851",
+                "timestamp": "2024-10-15T12:58:01Z"
             },
-          {
-            "version": "1.2.0.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.0/shizou_1.2.0.0.zip",
-            "checksum": "629ec36428abfb15d096dba6ef4b9cdf",
-            "timestamp": "2024-10-14T09:53:01Z"
+            {
+                "version": "1.2.1.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.1/shizou_1.2.1.0.zip",
+                "checksum": "34fcb6421aa5ac2af862453c103844d2",
+                "timestamp": "2024-10-15T12:31:26Z"
             },
-          {
-            "version": "1.1.4.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.1.4/shizou_1.1.4.0.zip",
-            "checksum": "354f64e544b2dc849e55ad43c1999aa4",
-            "timestamp": "2024-10-08T19:59:29Z"
+            {
+                "version": "1.2.0.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.2.0/shizou_1.2.0.0.zip",
+                "checksum": "629ec36428abfb15d096dba6ef4b9cdf",
+                "timestamp": "2024-10-14T09:53:01Z"
             },
-          {
-            "version": "1.1.3.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.1.3/shizou_1.1.3.0.zip",
-            "checksum": "0f93d41b11f588b736606dc22bcf2ca0",
-            "timestamp": "2024-10-08T19:48:58Z"
+            {
+                "version": "1.1.4.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.1.4/shizou_1.1.4.0.zip",
+                "checksum": "354f64e544b2dc849e55ad43c1999aa4",
+                "timestamp": "2024-10-08T19:59:29Z"
             },
-          {
-            "version": "1.1.2.0",
-            "changelog": "",
-            "targetAbi": "10.9.9.0",
-            "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.1.2/shizou_1.1.2.0.zip",
-            "checksum": "748d5cc782162d8a11c0d71764f82aac",
-            "timestamp": "2024-10-08T19:09:46Z"
+            {
+                "version": "1.1.3.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.1.3/shizou_1.1.3.0.zip",
+                "checksum": "0f93d41b11f588b736606dc22bcf2ca0",
+                "timestamp": "2024-10-08T19:48:58Z"
             },
-          {
+            {
+                "version": "1.1.2.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou/releases/download/JellyfinPlugin/v1.1.2/shizou_1.1.2.0.zip",
+                "checksum": "748d5cc782162d8a11c0d71764f82aac",
+                "timestamp": "2024-10-08T19:09:46Z"
+            },
+            {
                 "version": "1.1.1.0",
                 "changelog": "",
                 "targetAbi": "10.9.9.0",

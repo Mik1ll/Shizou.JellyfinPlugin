@@ -8,7 +8,7 @@ jobs:
   publish-jellyfin-plugin:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
+      contents: write
     steps:
     - uses: actions/checkout@v4
       with:

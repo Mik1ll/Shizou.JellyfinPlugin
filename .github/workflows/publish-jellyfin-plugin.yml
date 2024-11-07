@@ -31,6 +31,8 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: gh release create "$GITHUB_REF_NAME" ./artifacts/*.zip --generate-notes --verify-tag
     - name: Push Repository Index
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

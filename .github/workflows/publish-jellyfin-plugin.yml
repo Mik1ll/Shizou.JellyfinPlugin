@@ -33,6 +33,9 @@ jobs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        branch_name="update-repo-$GITHUB_REF_NAME"
+        git checkout -b "$branch_name" --track "origin/$branch_name"
         git add Repository/manifest.json
         git commit -m "Add $GITHUB_REF_NAME to Repository"
         git push
+        gh pr create --assignee "@$GITHUB_REPOSITORY_OWNER"

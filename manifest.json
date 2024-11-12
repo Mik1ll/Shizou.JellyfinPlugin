@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "1.4.0.0",
+                "changelog": "",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou.JellyfinPlugin/releases/download/v1.4.0/shizou_1.4.0.0.zip",
+                "checksum": "60d8dfc8db725110b80ab6705dd8f389",
+                "timestamp": "2024-11-12T10:27:02Z"
+            },
+            {
                 "version": "1.3.10.0",
                 "changelog": "",
                 "targetAbi": "10.9.9.0",

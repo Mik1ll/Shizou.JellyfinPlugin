@@ -76,19 +76,19 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 SortOrder = credit.AniDbCharacterId is not null
                     ? credit.Role switch
                     {
-                        var r when r.Contains("Main", StringComparison.OrdinalIgnoreCase) => 0,
-                        var r when r.Contains("Secondary", StringComparison.OrdinalIgnoreCase) => 1,
-                        var r when r.Contains("appears", StringComparison.OrdinalIgnoreCase) => 2,
+                        { } r when r.Contains("Main", StringComparison.OrdinalIgnoreCase) => 0,
+                        { } r when r.Contains("Secondary", StringComparison.OrdinalIgnoreCase) => 1,
+                        { } r when r.Contains("appears", StringComparison.OrdinalIgnoreCase) => 2,
                         _ => 3
                     }
                     : credit.Role switch
                     {
-                        var r when r.Contains("Original Work", StringComparison.OrdinalIgnoreCase) => 4,
-                        var r when r.Contains("Direction", StringComparison.OrdinalIgnoreCase) => 5,
-                        var r when r.Contains("Storyboard", StringComparison.OrdinalIgnoreCase) => 6,
-                        var r when r.Contains("Series Composition", StringComparison.OrdinalIgnoreCase) => 6,
-                        var r when r.Contains("Episode Direction", StringComparison.OrdinalIgnoreCase) => 7,
-                        var r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
+                        { } r when r.Contains("Original Work", StringComparison.OrdinalIgnoreCase) => 4,
+                        { } r when r.Contains("Direction", StringComparison.OrdinalIgnoreCase) => 5,
+                        { } r when r.Contains("Storyboard", StringComparison.OrdinalIgnoreCase) => 6,
+                        { } r when r.Contains("Series Composition", StringComparison.OrdinalIgnoreCase) => 6,
+                        { } r when r.Contains("Episode Direction", StringComparison.OrdinalIgnoreCase) => 7,
+                        { } r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
                         _ => int.MaxValue
                     },
                 ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } }

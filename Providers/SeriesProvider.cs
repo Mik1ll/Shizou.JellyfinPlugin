@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Jellyfin.Data.Enums;
+﻿using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
@@ -24,19 +23,8 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
             (sc, ct) => sc.AniDbAnimesGetAsync(Convert.ToInt32(animeId), ct),
             cancellationToken).ConfigureAwait(false);
 
-
-        DateTimeOffset? airDateOffset, endDateOffset;
-        {
-            if (!DateTime.TryParseExact(anime.AirDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var airDateTime))
-                if (!DateTime.TryParseExact(anime.AirDate, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out airDateTime))
-                    DateTime.TryParseExact(anime.AirDate, "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out airDateTime);
-            airDateOffset = airDateTime == DateTime.MinValue ? null : new DateTimeOffset(airDateTime, TimeSpan.FromHours(9));
-
-            if (!DateTime.TryParseExact(anime.EndDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var endDateTime))
-                if (!DateTime.TryParseExact(anime.EndDate, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out endDateTime))
-                    DateTime.TryParseExact(anime.EndDate, "yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out endDateTime);
-            endDateOffset = endDateTime == DateTime.MinValue ? null : new DateTimeOffset(endDateTime, TimeSpan.FromHours(9));
-        }
+        DateTimeOffset? airDateOffset = anime.AirDate is null ? null : new DateTimeOffset(anime.AirDate.Value.DateTime, TimeSpan.FromHours(9));
+        DateTimeOffset? endDateOffset = anime.EndDate is null ? null : new DateTimeOffset(anime.EndDate.Value.DateTime, TimeSpan.FromHours(9));
 
         var result = new MetadataResult<Series>
         {

@@ -38,10 +38,11 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             else
                 break;
 
-        var result = new MetadataResult<Episode>()
+        DateTimeOffset? airDateOffset = episode.AirDate is null ? null : new DateTimeOffset(episode.AirDate.Value.DateTime, TimeSpan.FromHours(9));
+        var result = new MetadataResult<Episode>
         {
             HasMetadata = true,
-            Item = new Episode()
+            Item = new Episode
             {
                 Name = episode.EpisodeType switch
                     {
@@ -55,8 +56,8 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
                 Overview = episode.Summary,
                 RunTimeTicks = episode.DurationMinutes is not null ? TimeSpan.FromMinutes(episode.DurationMinutes.Value).Ticks : null,
                 OriginalTitle = episode.TitleOriginal,
-                PremiereDate = episode.AirDate?.UtcDateTime,
-                ProductionYear = episode.AirDate?.Year,
+                PremiereDate = airDateOffset?.UtcDateTime,
+                ProductionYear = airDateOffset?.Year,
                 IndexNumber = (int)episode.EpisodeType * 1000 + episode.Number,
                 IndexNumberEnd = lastNum != episode.Number ? (int)episode.EpisodeType * 1000 + lastNum : null,
                 ParentIndexNumber = episode.EpisodeType == AniDbEpisodeEpisodeType.Episode ? null : 0,

@@ -15,6 +15,11 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 1
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+        ref: repository
+        path: Repository
     - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
@@ -35,12 +40,14 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        cd Repository
+        cp -f ../artifacts/manifest.json ./
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         branch_name="update-repo-$GITHUB_REF_NAME"
         git checkout -b "$branch_name"
-        git add Repository/manifest.json
+        git add manifest.json
         commit_msg="Add $GITHUB_REF_NAME to Repository"
         git commit -m "$commit_msg"
         git push -u origin "$branch_name"
-        gh pr create --assignee "$GITHUB_REPOSITORY_OWNER" --title "$commit_msg" --body "" --base master
+        gh pr create --assignee "$GITHUB_REPOSITORY_OWNER" --title "$commit_msg" --body "" --base repository

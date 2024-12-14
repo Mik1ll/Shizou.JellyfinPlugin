@@ -116,7 +116,7 @@ package_url = f"{repo_url.rstrip('/')}/releases/download/{git_tag}/{package_file
 
 print("Package url: " + package_url)
 
-manifest_file = "Repository/manifest.json"
+manifest_file = artifact_dir.joinpath("manifest.json")
 
 jprm_repo_p = subprocess.run(
     [

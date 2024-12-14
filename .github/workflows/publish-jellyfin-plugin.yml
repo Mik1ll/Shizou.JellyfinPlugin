@@ -41,7 +41,6 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd Repository
-        cp -f ../artifacts/manifest.json ./
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         branch_name="update-repo-$GITHUB_REF_NAME"

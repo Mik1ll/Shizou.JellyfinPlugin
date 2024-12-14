@@ -1,5 +1,6 @@
 ﻿using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
@@ -7,7 +8,7 @@ using Shizou.JellyfinPlugin.Extensions;
 
 namespace Shizou.JellyfinPlugin.Services;
 
-public class PlayedStateService : IDisposable
+public sealed class PlayedStateService : IDisposable
 {
     private static readonly SemaphoreSlim ThrottleConcurrentConnections = new(10, 10);
     private readonly ILogger<PlayedStateService> _logger;
@@ -69,13 +70,13 @@ public class PlayedStateService : IDisposable
 
     private async void OnUserDataSaved(object? sender, UserDataSaveEventArgs e)
     {
-        if (e.SaveReason != UserDataSaveReason.TogglePlayed ||
-            e.Item is not Video { MediaType: MediaType.Video, IsFolder: false, SourceType: SourceType.Library } vid ||
-            !vid.ProviderIds.ContainsKey(ProviderIds.ShizouEp)) return;
-        var adminUser = _usermanager.Users.FirstOrDefault(u => u.HasPermission(PermissionKind.IsAdministrator));
+        if (
+            !new[] { UserDataSaveReason.TogglePlayed, UserDataSaveReason.PlaybackFinished }.Contains(e.SaveReason) ||
+            e.Item is not Episode ep ||
+            !int.TryParse(ep.GetProviderId(ProviderIds.ShizouEp), out var aniDbFileId) ||
+            (!_usermanager.GetUserById(e.UserId)?.HasPermission(PermissionKind.IsAdministrator) ?? true)
+        ) return;
 
-        if (adminUser is null || e.UserId != adminUser.Id || !int.TryParse(vid.ProviderIds[ProviderIds.ShizouEp], out var aniDbFileId))
-            return;
         _logger.LogInformation("Updating Shizou watched state for AniDB file ID: {AniDbFileId}, {NewPlayedState}", aniDbFileId, e.UserData.Played);
         await ThrottleConcurrentConnections.WaitAsync().ConfigureAwait(false);
         try

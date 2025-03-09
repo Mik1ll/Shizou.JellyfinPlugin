@@ -2,9 +2,10 @@
 
 namespace Shizou.JellyfinPlugin.ExternalIds;
 
-public static class AniDbIdParser
+public static partial class AniDbIdParser
 {
-    private static readonly Regex IdRegex = new(@"\[anidb-(\d+)\]", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+    public static string? IdFromString(string input) => IdRegex().Match(input).Groups[1].Value is var v && string.IsNullOrEmpty(v) ? null : v;
 
-    public static string? IdFromString(string input) => IdRegex.Match(input).Groups[1].Value;
+    [GeneratedRegex(@"\[anidb-([0-9]+)\]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex IdRegex();
 }

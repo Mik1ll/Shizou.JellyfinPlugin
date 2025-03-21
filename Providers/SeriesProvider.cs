@@ -4,13 +4,16 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using Shizou.JellyfinPlugin.Extensions;
 using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
 
 public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
+    private readonly ShizouClientManager _shizouClientManager;
+
+    public SeriesProvider(ShizouClientManager shizouClientManager) => _shizouClientManager = shizouClientManager;
+
     public string Name => "Shizou";
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
@@ -19,8 +22,8 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
-        var anime = await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
-            (sc, ct) => sc.AniDbAnimesGetAsync(Convert.ToInt32(animeId), ct),
+        var anime = await _shizouClientManager.WithLoginRetry(
+            sc => sc.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken),
             cancellationToken).ConfigureAwait(false);
 
         DateTimeOffset? airDateOffset = anime.AirDate is null ? null : new DateTimeOffset(anime.AirDate.Value.DateTime, TimeSpan.FromHours(9));
@@ -42,19 +45,25 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                     airDateOffset is not null && endDateOffset is not null ? SeriesStatus.Continuing : null,
                 CommunityRating = anime.Rating,
                 Tags = anime.Tags.ToArray(),
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId } }
+                ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId } },
             },
-            HasMetadata = true
+            HasMetadata = true,
         };
         await AddPeople(result, Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
 
         return result;
     }
 
+    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
+        Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
+
     private async Task AddPeople(MetadataResult<Series> result, int animeId, CancellationToken cancellationToken)
     {
         result.ResetPeople();
-        var credits = await Plugin.Instance.ShizouHttpClient.AniDbCreditsByAniDbAnimeIdAsync(animeId, cancellationToken).ConfigureAwait(false);
+        var credits = await _shizouClientManager.ShizouHttpClient.AniDbCreditsByAniDbAnimeIdAsync(animeId, cancellationToken).ConfigureAwait(false);
         foreach (var credit in credits)
             result.AddPerson(new PersonInfo()
             {
@@ -67,7 +76,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                         { } r when r.Contains("Main", StringComparison.OrdinalIgnoreCase) => 0,
                         { } r when r.Contains("Secondary", StringComparison.OrdinalIgnoreCase) => 1,
                         { } r when r.Contains("appears", StringComparison.OrdinalIgnoreCase) => 2,
-                        _ => 3
+                        _ => 3,
                     }
                     : credit.Role switch
                     {
@@ -77,15 +86,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                         { } r when r.Contains("Series Composition", StringComparison.OrdinalIgnoreCase) => 6,
                         { } r when r.Contains("Episode Direction", StringComparison.OrdinalIgnoreCase) => 7,
                         { } r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
-                        _ => int.MaxValue
+                        _ => int.MaxValue,
                     },
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } }
+                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } },
             });
     }
-
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>
-        throw new NotImplementedException();
-
-    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken) =>
-        Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 }

@@ -4,7 +4,6 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
-using Shizou.JellyfinPlugin.Extensions;
 
 namespace Shizou.JellyfinPlugin.Services;
 
@@ -15,21 +14,29 @@ public sealed class PlayedStateService : IDisposable
     private readonly IUserManager _usermanager;
     private readonly IUserDataManager _userDataManager;
     private readonly ILibraryManager _libraryManager;
+    private readonly ShizouClientManager _shizouClientManager;
 
-    public PlayedStateService(ILogger<PlayedStateService> logger, IUserManager usermanager, IUserDataManager userDataManager, ILibraryManager libraryManager)
+    public PlayedStateService(
+        ILogger<PlayedStateService> logger,
+        IUserManager usermanager,
+        IUserDataManager userDataManager,
+        ILibraryManager libraryManager,
+        ShizouClientManager shizouClientManager
+    )
     {
         _logger = logger;
         _usermanager = usermanager;
         _userDataManager = userDataManager;
         _libraryManager = libraryManager;
+        _shizouClientManager = shizouClientManager;
         _userDataManager.UserDataSaved += OnUserDataSaved;
     }
 
     public async Task UpdateStates(CancellationToken cancellationToken, IProgress<double>? progress = null)
     {
         _logger.LogInformation("Starting watched state sync");
-        var fileStates = (await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
-                (sc, ct) => sc.FileWatchedStatesGetAllAsync(ct), cancellationToken).ConfigureAwait(false))
+        var fileStates = (await _shizouClientManager.WithLoginRetry(
+                sc => sc.FileWatchedStatesGetAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
             .ToDictionary(fs => fs.AniDbFileId);
         var adminUser = _usermanager.Users.First(u => u.HasPermission(PermissionKind.IsAdministrator));
 
@@ -40,7 +47,7 @@ public sealed class PlayedStateService : IDisposable
             IsFolder = false,
             SourceTypes = [SourceType.Library],
             IsVirtualItem = false,
-            HasAnyProviderId = new Dictionary<string, string>() { { ProviderIds.ShizouEp, string.Empty } }
+            HasAnyProviderId = new Dictionary<string, string>() { { ProviderIds.ShizouEp, string.Empty } },
         });
         for (var idx = 0; idx < videos.Count; idx++)
         {
@@ -81,8 +88,10 @@ public sealed class PlayedStateService : IDisposable
         await ThrottleConcurrentConnections.WaitAsync().ConfigureAwait(false);
         try
         {
-            await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
-                (cl, ct) => e.UserData.Played ? cl.AniDbFilesMarkWatchedAsync(aniDbFileId, ct) : cl.AniDbFilesMarkUnwatchedAsync(aniDbFileId, ct),
+            await _shizouClientManager.WithLoginRetry(
+                cl => e.UserData.Played
+                    ? cl.AniDbFilesMarkWatchedAsync(aniDbFileId, CancellationToken.None)
+                    : cl.AniDbFilesMarkUnwatchedAsync(aniDbFileId, CancellationToken.None),
                 CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex) // Throws fatal error if not caught

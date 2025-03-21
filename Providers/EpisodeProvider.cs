@@ -5,7 +5,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Caching.Memory;
 using Shizou.HttpClient;
-using Shizou.JellyfinPlugin.Extensions;
 using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
@@ -14,6 +13,9 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 {
     private static readonly MemoryCache EpisodeCache = new(new MemoryCacheOptions());
     private static readonly ConcurrentDictionary<string, SemaphoreSlim> CacheLocks = new();
+    private readonly ShizouClientManager _shizouClientManager;
+
+    public EpisodeProvider(ShizouClientManager shizouClientManager) => _shizouClientManager = shizouClientManager;
 
     public string Name => "Shizou";
 
@@ -32,10 +34,10 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             episodes = (await EpisodeCache.GetOrCreateAsync(animeId.ToString(), async entry =>
             {
                 entry.SlidingExpiration = TimeSpan.FromSeconds(10);
-                var eps = await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
-                    (sc, ct) => sc.AniDbEpisodesByAniDbAnimeIdAsync(animeId, ct), cancellationToken).ConfigureAwait(false);
-                var xrefs = await Plugin.Instance.ShizouHttpClient.WithLoginRetry(
-                    (sc, ct) => sc.AniDbEpisodeFileXrefsByAniDbAnimeIdAsync(animeId, ct), cancellationToken).ConfigureAwait(false);
+                var eps = await _shizouClientManager.WithLoginRetry(
+                    sc => sc.AniDbEpisodesByAniDbAnimeIdAsync(animeId, cancellationToken), cancellationToken).ConfigureAwait(false);
+                var xrefs = await _shizouClientManager.WithLoginRetry(
+                    sc => sc.AniDbEpisodeFileXrefsByAniDbAnimeIdAsync(animeId, cancellationToken), cancellationToken).ConfigureAwait(false);
                 return eps.Select(ep => new
                 {
                     ep,

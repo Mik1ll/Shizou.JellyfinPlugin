@@ -70,11 +70,11 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             {
                 Name = episode.EpisodeType switch
                     {
-                        AniDbEpisodeEpisodeType.Special => "S",
-                        AniDbEpisodeEpisodeType.Credits => "C",
-                        AniDbEpisodeEpisodeType.Trailer => "T",
-                        AniDbEpisodeEpisodeType.Parody => "P",
-                        AniDbEpisodeEpisodeType.Other => "O",
+                        EpisodeType.Special => "S",
+                        EpisodeType.Credits => "C",
+                        EpisodeType.Trailer => "T",
+                        EpisodeType.Parody => "P",
+                        EpisodeType.Other => "O",
                         _ => "",
                     } + $"{episode.Number + (lastNum != episode.Number ? $"-{lastNum}" : "")}. {episode.TitleEnglish}",
                 Overview = episode.Summary,
@@ -84,7 +84,7 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
                 ProductionYear = airDateOffset?.Year,
                 IndexNumber = (int)episode.EpisodeType * 1000 + episode.Number,
                 IndexNumberEnd = lastNum != episode.Number ? (int)episode.EpisodeType * 1000 + lastNum : null,
-                ParentIndexNumber = episode.EpisodeType == AniDbEpisodeEpisodeType.Episode ? null : 0,
+                ParentIndexNumber = episode.EpisodeType == EpisodeType.Episode ? null : 0,
                 ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouEp, fileId.ToString() } },
             },
         };

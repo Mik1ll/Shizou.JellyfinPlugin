@@ -1,9 +1,7 @@
-﻿using System.Collections.Concurrent;
-using MediaBrowser.Controller.Entities.TV;
+﻿using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
-using Microsoft.Extensions.Caching.Memory;
 using Shizou.HttpClient;
 using Shizou.JellyfinPlugin.ExternalIds;
 

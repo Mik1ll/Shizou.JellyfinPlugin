@@ -11,8 +11,6 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
 {
-    private static readonly MemoryCache EpisodeCache = new(new MemoryCacheOptions());
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> CacheLocks = new();
     private readonly ShizouClientManager _shizouClientManager;
 
     public EpisodeProvider(ShizouClientManager shizouClientManager) => _shizouClientManager = shizouClientManager;
@@ -26,30 +24,12 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
         if (fileId == 0 || animeId == 0)
             return new MetadataResult<Episode>();
 
-        List<AniDbEpisode>? episodes;
-        var animeLock = CacheLocks.GetOrAdd(animeId.ToString(), _ => new SemaphoreSlim(1, 1));
-        await animeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            episodes = (await EpisodeCache.GetOrCreateAsync(animeId.ToString(), async entry =>
-            {
-                entry.SlidingExpiration = TimeSpan.FromSeconds(10);
-                var eps = await _shizouClientManager.WithLoginRetry(
-                    sc => sc.AniDbEpisodesByAniDbAnimeIdAsync(animeId, cancellationToken), cancellationToken).ConfigureAwait(false);
-                var xrefs = await _shizouClientManager.WithLoginRetry(
-                    sc => sc.AniDbEpisodeFileXrefsByAniDbAnimeIdAsync(animeId, cancellationToken), cancellationToken).ConfigureAwait(false);
-                return eps.Select(ep => new
-                {
-                    ep,
-                    xrefs = xrefs.Where(xr => xr.AniDbEpisodeId == ep.Id).ToList(),
-                }).ToList();
-            }).ConfigureAwait(false))?.Where(e => e.xrefs.Any(xr => xr.AniDbFileId == fileId)).Select(e => e.ep).ToList();
-        }
-        finally
-        {
-            animeLock.Release();
-        }
-
+        var epIds = (await _shizouClientManager.GetEpFileXrefsAsync(animeId, cancellationToken).ConfigureAwait(false))
+            ?.Where(xr => xr.AniDbFileId == fileId).Select(xr => xr.AniDbEpisodeId).ToHashSet();
+        if (epIds is null)
+            return new MetadataResult<Episode>();
+        var episodes = (await _shizouClientManager.GetEpisodesAsync(animeId, cancellationToken).ConfigureAwait(false))
+            ?.Where(e => epIds.Contains(e.Id)).ToList();
         if (episodes?.Count is null or 0)
             return new MetadataResult<Episode>();
 

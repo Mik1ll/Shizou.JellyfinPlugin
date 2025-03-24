@@ -7,52 +7,121 @@ namespace Shizou.JellyfinPlugin;
 
 public class ShizouClientManager
 {
-    public readonly ShizouHttpClient ShizouHttpClient;
-    public readonly System.Net.Http.HttpClient HttpClient;
+    private readonly ShizouHttpClient _shizouHttpClient;
+    private readonly System.Net.Http.HttpClient _httpClient;
     private readonly ILogger<ShizouClientManager> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly SemaphoreSlim _loggingInLock = new(1, 1);
 
-    private bool _loggedIn = false;
     private DateTimeOffset? _lastLogin;
 
     public ShizouClientManager(ILogger<ShizouClientManager> logger, IMemoryCache memoryCache)
     {
         _logger = logger;
         _memoryCache = memoryCache;
-        HttpClient = new System.Net.Http.HttpClient();
-        ShizouHttpClient = new ShizouHttpClient(Plugin.Instance.Configuration.ServerBaseAddress, HttpClient);
+        _httpClient = new System.Net.Http.HttpClient();
+        _shizouHttpClient = new ShizouHttpClient(Plugin.Instance.Configuration.ServerBaseAddress, _httpClient);
     }
 
-    public async Task<T> WithLoginRetry<T>(Func<ShizouHttpClient, Task<T>> action,
-        CancellationToken cancellationToken)
+    private static async Task<T?> Catch404<T>(Task<T> task)
     {
         try
         {
-            return await action(ShizouHttpClient).ConfigureAwait(false);
+            return await task.ConfigureAwait(false);
+        }
+        catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status404NotFound)
+        {
+            return default;
+        }
+    }
+
+    public Task<HttpResponseMessage> GetAsync(string url, CancellationToken cancellationToken) =>
+        WithLoginRetry(ct => _httpClient.GetAsync(new Uri(new Uri(_shizouHttpClient.BaseUrl), url).AbsoluteUri, ct), cancellationToken);
+
+    public Task<ICollection<FileWatchedState>> GetAllWatchedStates(CancellationToken cancellationToken) =>
+        WithLoginRetry(ct => _shizouHttpClient.FileWatchedStatesGetAllAsync(ct), cancellationToken);
+
+    public Task MarkFilePlayedState(int fileId, bool played, CancellationToken cancellationToken) =>
+        WithLoginRetry(ct => played
+            ? _shizouHttpClient.AniDbFilesMarkWatchedAsync(fileId, ct)
+            : _shizouHttpClient.AniDbFilesMarkUnwatchedAsync(fileId, ct), cancellationToken);
+
+    public async Task<AniDbAnime?> GetAnimeAsync(int animeId, CancellationToken cancellationToken)
+    {
+        var key = $"anidb-series-{animeId}";
+        var anime = await GetCachedOrFallback(key, ct => _shizouHttpClient.AniDbAnimesGetAsync(animeId, ct), cancellationToken).ConfigureAwait(false);
+        return anime;
+    }
+
+    public async Task<ICollection<AniDbCredit>?> GetCreditsAsync(int animeId, CancellationToken cancellationToken)
+    {
+        var key = $"anidb-credits-{animeId}";
+        var credits = await GetCachedOrFallback(key,
+            ct => _shizouHttpClient.AniDbCreditsByAniDbAnimeIdAsync(animeId, ct),
+            cancellationToken).ConfigureAwait(false);
+        return credits;
+    }
+
+    public async Task<ICollection<AniDbEpisode>?> GetEpisodesAsync(int animeId, CancellationToken cancellationToken)
+    {
+        var key = $"anidb-episodes-{animeId}";
+        var episodes = await GetCachedOrFallback(key,
+            ct => _shizouHttpClient.AniDbEpisodesByAniDbAnimeIdAsync(animeId, ct),
+            cancellationToken).ConfigureAwait(false);
+
+        return episodes;
+    }
+
+    public async Task<ICollection<AniDbEpisodeFileXref>?> GetEpFileXrefsAsync(int animeId, CancellationToken cancellationToken)
+    {
+        var key = $"anidb-epfilexrefs-{animeId}";
+        var xrefs = await GetCachedOrFallback(key,
+            ct => _shizouHttpClient.AniDbEpisodeFileXrefsByAniDbAnimeIdAsync(animeId, ct),
+            cancellationToken).ConfigureAwait(false);
+        return xrefs;
+    }
+
+    private async Task<T?> GetCachedOrFallback<T>(string key, Func<CancellationToken, Task<T>> getter, CancellationToken cancellationToken)
+    {
+        var result = await _memoryCache.GetOrCreateAsync(key, async entry =>
+        {
+            entry.SlidingExpiration = TimeSpan.FromMinutes(1);
+            var r = await Catch404(WithLoginRetry(getter, cancellationToken)).ConfigureAwait(false);
+            if (r is null)
+                entry.Dispose();
+            return r;
+        }).ConfigureAwait(false);
+        return result;
+    }
+
+    private async Task<T> WithLoginRetry<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await action(cancellationToken).ConfigureAwait(false);
         }
         catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
         {
             await LoginAsync(cancellationToken).ConfigureAwait(false);
-            return await action(ShizouHttpClient).ConfigureAwait(false);
+            return await action(cancellationToken).ConfigureAwait(false);
         }
     }
 
-    public async Task WithLoginRetry(Func<ShizouHttpClient, Task> action,
+    private async Task WithLoginRetry(Func<CancellationToken, Task> action,
         CancellationToken cancellationToken)
     {
         try
         {
-            await action(ShizouHttpClient).ConfigureAwait(false);
+            await action(cancellationToken).ConfigureAwait(false);
         }
         catch (ApiException ex) when (ex.StatusCode == StatusCodes.Status401Unauthorized)
         {
             await LoginAsync(cancellationToken).ConfigureAwait(false);
-            await action(ShizouHttpClient).ConfigureAwait(false);
+            await action(cancellationToken).ConfigureAwait(false);
         }
     }
 
-    public async Task LoginAsync(CancellationToken cancellationToken)
+    private async Task LoginAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -70,7 +139,7 @@ public class ShizouClientManager
             }
 
             _logger.LogInformation("Logging in...");
-            await ShizouHttpClient.AccountLoginAsync(Plugin.Instance.Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
+            await _shizouHttpClient.AccountLoginAsync(Plugin.Instance.Configuration.ServerPassword, cancellationToken).ConfigureAwait(false);
             _lastLogin = DateTimeOffset.Now;
             _logger.LogInformation("Successfully logged in");
         }

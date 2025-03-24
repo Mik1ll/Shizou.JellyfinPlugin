@@ -22,9 +22,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         if (string.IsNullOrWhiteSpace(animeId))
             return new MetadataResult<Series>();
 
-        var anime = await _shizouClientManager.WithLoginRetry(
-            sc => sc.AniDbAnimesGetAsync(Convert.ToInt32(animeId), cancellationToken),
-            cancellationToken).ConfigureAwait(false);
+        var anime = await _shizouClientManager.GetAnimeAsync(Convert.ToInt32(animeId), cancellationToken).ConfigureAwait(false);
+        if (anime is null)
+            return new MetadataResult<Series>();
 
         DateTimeOffset? airDateOffset = anime.AirDate is null ? null : new DateTimeOffset(anime.AirDate.Value.DateTime, TimeSpan.FromHours(9));
         DateTimeOffset? endDateOffset = anime.EndDate is null ? null : new DateTimeOffset(anime.EndDate.Value.DateTime, TimeSpan.FromHours(9));
@@ -45,7 +45,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                     airDateOffset is not null && endDateOffset is not null ? SeriesStatus.Continuing : null,
                 CommunityRating = anime.Rating,
                 Tags = anime.Tags.ToArray(),
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.Shizou, animeId } },
+                ProviderIds = new Dictionary<string, string> { { ProviderIds.Shizou, animeId } },
             },
             HasMetadata = true,
         };
@@ -63,9 +63,11 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
     private async Task AddPeople(MetadataResult<Series> result, int animeId, CancellationToken cancellationToken)
     {
         result.ResetPeople();
-        var credits = await _shizouClientManager.ShizouHttpClient.AniDbCreditsByAniDbAnimeIdAsync(animeId, cancellationToken).ConfigureAwait(false);
+        var credits = await _shizouClientManager.GetCreditsAsync(animeId, cancellationToken).ConfigureAwait(false);
+        if (credits is null)
+            return;
         foreach (var credit in credits)
-            result.AddPerson(new PersonInfo()
+            result.AddPerson(new PersonInfo
             {
                 Name = credit.AniDbCreator.Name,
                 Role = credit.AniDbCharacter?.Name ?? credit.Role,
@@ -88,7 +90,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                         { } r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
                         _ => int.MaxValue,
                     },
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } },
+                ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } },
             });
     }
 }

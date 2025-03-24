@@ -35,8 +35,7 @@ public sealed class PlayedStateService : IDisposable
     public async Task UpdateStates(CancellationToken cancellationToken, IProgress<double>? progress = null)
     {
         _logger.LogInformation("Starting watched state sync");
-        var fileStates = (await _shizouClientManager.WithLoginRetry(
-                sc => sc.FileWatchedStatesGetAllAsync(cancellationToken), cancellationToken).ConfigureAwait(false))
+        var fileStates = (await _shizouClientManager.GetAllWatchedStates(cancellationToken).ConfigureAwait(false))
             .ToDictionary(fs => fs.AniDbFileId);
         var adminUser = _usermanager.Users.First(u => u.HasPermission(PermissionKind.IsAdministrator));
 
@@ -88,11 +87,7 @@ public sealed class PlayedStateService : IDisposable
         await ThrottleConcurrentConnections.WaitAsync().ConfigureAwait(false);
         try
         {
-            await _shizouClientManager.WithLoginRetry(
-                cl => e.UserData.Played
-                    ? cl.AniDbFilesMarkWatchedAsync(aniDbFileId, CancellationToken.None)
-                    : cl.AniDbFilesMarkUnwatchedAsync(aniDbFileId, CancellationToken.None),
-                CancellationToken.None).ConfigureAwait(false);
+            await _shizouClientManager.MarkFilePlayedState(aniDbFileId, e.UserData.Played, CancellationToken.None).ConfigureAwait(false);
         }
         catch (Exception ex) // Throws fatal error if not caught
         {

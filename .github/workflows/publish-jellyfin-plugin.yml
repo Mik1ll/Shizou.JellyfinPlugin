@@ -26,9 +26,7 @@ jobs:
     - name: Create Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
-        release_notes=$(gh release view "$GITHUB_REF_NAME" --json body --jq '.body')
+      run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
     - name: Add Source Credential
       run: |
         source_name="github.com_$GITHUB_REPOSITORY_OWNER"
@@ -38,7 +36,9 @@ jobs:
     - name: Install jprm
       run: pip install jprm~=1.1
     - name: Build & Package
-      run: python3 jprmbuild.py "$GITHUB_REPOSITORY" "$release_notes"
+      run: |
+        release_notes=$(gh release view "$GITHUB_REF_NAME" --json body --jq '.body')
+        python3 jprmbuild.py "$GITHUB_REPOSITORY" "$release_notes"
     - name: Upload Artifacts
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

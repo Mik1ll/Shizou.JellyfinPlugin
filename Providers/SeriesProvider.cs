@@ -67,30 +67,31 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         if (credits is null)
             return;
         foreach (var credit in credits)
-            result.AddPerson(new PersonInfo
-            {
-                Name = credit.AniDbCreator.Name,
-                Role = credit.AniDbCharacter?.Name ?? credit.Role,
-                Type = credit.AniDbCharacterId is null ? PersonKind.Unknown : PersonKind.Actor,
-                SortOrder = credit.AniDbCharacterId is not null
-                    ? credit.Role switch
-                    {
-                        { } r when r.Contains("Main", StringComparison.OrdinalIgnoreCase) => 0,
-                        { } r when r.Contains("Secondary", StringComparison.OrdinalIgnoreCase) => 1,
-                        { } r when r.Contains("appears", StringComparison.OrdinalIgnoreCase) => 2,
-                        _ => 3,
-                    }
-                    : credit.Role switch
-                    {
-                        { } r when r.Contains("Original Work", StringComparison.OrdinalIgnoreCase) => 4,
-                        { } r when r.Contains("Direction", StringComparison.OrdinalIgnoreCase) => 5,
-                        { } r when r.Contains("Storyboard", StringComparison.OrdinalIgnoreCase) => 6,
-                        { } r when r.Contains("Series Composition", StringComparison.OrdinalIgnoreCase) => 6,
-                        { } r when r.Contains("Episode Direction", StringComparison.OrdinalIgnoreCase) => 7,
-                        { } r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
-                        _ => int.MaxValue,
-                    },
-                ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } },
-            });
+            if (!string.IsNullOrWhiteSpace(credit.AniDbCreator.Name))
+                result.AddPerson(new PersonInfo
+                {
+                    Name = credit.AniDbCreator.Name,
+                    Role = credit.AniDbCharacter?.Name ?? credit.Role,
+                    Type = credit.AniDbCharacterId is null ? PersonKind.Unknown : PersonKind.Actor,
+                    SortOrder = credit.AniDbCharacterId is not null
+                        ? credit.Role switch
+                        {
+                            { } r when r.Contains("Main", StringComparison.OrdinalIgnoreCase) => 0,
+                            { } r when r.Contains("Secondary", StringComparison.OrdinalIgnoreCase) => 1,
+                            { } r when r.Contains("appears", StringComparison.OrdinalIgnoreCase) => 2,
+                            _ => 3,
+                        }
+                        : credit.Role switch
+                        {
+                            { } r when r.Contains("Original Work", StringComparison.OrdinalIgnoreCase) => 4,
+                            { } r when r.Contains("Direction", StringComparison.OrdinalIgnoreCase) => 5,
+                            { } r when r.Contains("Storyboard", StringComparison.OrdinalIgnoreCase) => 6,
+                            { } r when r.Contains("Series Composition", StringComparison.OrdinalIgnoreCase) => 6,
+                            { } r when r.Contains("Episode Direction", StringComparison.OrdinalIgnoreCase) => 7,
+                            { } r when r.Contains("Character Design", StringComparison.OrdinalIgnoreCase) => 8,
+                            _ => int.MaxValue,
+                        },
+                    ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouCreator, credit.AniDbCreator.Id.ToString() } },
+                });
     }
 }

@@ -9,6 +9,7 @@ import urllib
 
 parser = argparse.ArgumentParser()
 parser.add_argument("GITHUB_REPO", help="The github repo the release will be hosted on")
+parser.add_argument("RELEASE_NOTES", help="The release notes to include in the metadata")
 args = parser.parse_args()
 
 if str(args.GITHUB_REPO).startswith("https://"):
@@ -66,7 +67,7 @@ if cfg is None:
     exit(f'Failed to load any metadata from "{metadata_file}"')
 
 cfg["targetAbi"] = target_abi
-cfg["changelog"] = ""
+cfg["changelog"] = args.RELEASE_NOTES
 
 with open(metadata_file, "w") as metadata:
     yaml.safe_dump(cfg, metadata, sort_keys=False)

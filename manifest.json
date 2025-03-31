@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "2.3.3.0",
+                "changelog": "## What's Changed\n* Update http client by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/34\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.3.2...v2.3.3",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou.JellyfinPlugin/releases/download/v2.3.3/shizou_2.3.3.0.zip",
+                "checksum": "3f99acc1b1e7bf5b6a5ccf2789db2044",
+                "timestamp": "2025-03-31T08:44:50Z"
+            },
+            {
                 "version": "2.3.2.0",
                 "changelog": "## What's Changed\n* Fix release notes 2 by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/32\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.3.1...v2.3.2",
                 "targetAbi": "10.9.9.0",

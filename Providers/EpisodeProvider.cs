@@ -44,13 +44,16 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
         var epName = string.Join(" / ", episodes.Select(e => e.TitleEnglish));
 
         DateTimeOffset? airDateOffset = episode.AirDate is null ? null : new DateTimeOffset(episode.AirDate.Value.DateTime, TimeSpan.FromHours(9));
+
+        var overview = episode.Summary is null ? null : SeriesProvider.AniDbLinksToMarkDown(episode.Summary);
+
         var result = new MetadataResult<Episode>
         {
             HasMetadata = true,
             Item = new Episode
             {
                 Name = epName,
-                Overview = episode.Summary,
+                Overview = overview,
                 RunTimeTicks = episode.DurationMinutes is not null ? TimeSpan.FromMinutes(episode.DurationMinutes.Value).Ticks : null,
                 OriginalTitle = episode.TitleOriginal,
                 PremiereDate = airDateOffset?.UtcDateTime,

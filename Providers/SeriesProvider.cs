@@ -1,4 +1,5 @@
-﻿using Jellyfin.Data.Enums;
+﻿using System.Text.RegularExpressions;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
@@ -8,9 +9,14 @@ using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
 
-public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
+public partial class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
     private readonly ShizouClientManager _shizouClientManager;
+
+    [GeneratedRegex(@"(https?:\/\/\S*?) \[(.+?)\]")]
+    public static partial Regex LinkRegex();
+
+    public static string AniDbLinksToMarkDown(string text) => LinkRegex().Replace(text, match => $"[{match.Groups[2]}]({match.Groups[1]})");
 
     public SeriesProvider(ShizouClientManager shizouClientManager) => _shizouClientManager = shizouClientManager;
 
@@ -29,6 +35,8 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         DateTimeOffset? airDateOffset = anime.AirDate is null ? null : new DateTimeOffset(anime.AirDate.Value.DateTime, TimeSpan.FromHours(9));
         DateTimeOffset? endDateOffset = anime.EndDate is null ? null : new DateTimeOffset(anime.EndDate.Value.DateTime, TimeSpan.FromHours(9));
 
+        var overview = anime.Description is null ? null : AniDbLinksToMarkDown(anime.Description);
+
         var result = new MetadataResult<Series>
         {
             Item = new Series
@@ -37,7 +45,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 OriginalTitle = anime.TitleOriginal,
                 PremiereDate = airDateOffset?.UtcDateTime,
                 EndDate = endDateOffset?.UtcDateTime,
-                Overview = anime.Description,
+                Overview = overview,
                 HomePageUrl = $"https://anidb.net/anime/{animeId}",
                 ProductionYear = airDateOffset?.Year,
                 Status = airDateOffset <= DateTime.Now ? SeriesStatus.Ended :

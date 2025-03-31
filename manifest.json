@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "2.4.0.0",
+                "changelog": "## What's Changed\n* Improve episode name/numbering, season assignment by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/36\n* Update the base url without needing to restart by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/37\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.3.3...v2.4.0",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou.JellyfinPlugin/releases/download/v2.4.0/shizou_2.4.0.0.zip",
+                "checksum": "6437995c5732af6218e8a374738a0e94",
+                "timestamp": "2025-03-31T11:22:54Z"
+            },
+            {
                 "version": "2.3.3.0",
                 "changelog": "## What's Changed\n* Update http client by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/34\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.3.2...v2.3.3",
                 "targetAbi": "10.9.9.0",

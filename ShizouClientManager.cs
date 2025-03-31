@@ -21,7 +21,10 @@ public class ShizouClientManager
         _memoryCache = memoryCache;
         _httpClient = new System.Net.Http.HttpClient();
         _shizouHttpClient = new ShizouHttpClient(Plugin.Instance.Configuration.ServerBaseAddress, _httpClient);
+        Instance = this;
     }
+
+    public static ShizouClientManager? Instance { get; private set; }
 
     private static async Task<T?> Catch404<T>(Task<T> task)
     {
@@ -147,5 +150,10 @@ public class ShizouClientManager
         {
             _loggingInLock.Release();
         }
+    }
+
+    public void SetBaseUrl(string baseUrl)
+    {
+        _shizouHttpClient.BaseUrl = baseUrl;
     }
 }

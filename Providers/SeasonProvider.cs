@@ -6,17 +6,20 @@ namespace Shizou.JellyfinPlugin.Providers;
 
 public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
 {
-    public string Name { get; } = "Shizou";
+    public string Name => "Shizou";
 
     public Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
     {
-        var result = new MetadataResult<Season>()
+        var seasonNumber = info.IndexNumber == 0 ? 0 : 1;
+
+        var result = new MetadataResult<Season>
         {
             HasMetadata = true,
-            Item = new Season()
+            Item = new Season
             {
-                Name = "Episodes"
-            }
+                Name = seasonNumber == 0 ? "Specials" : "Episodes",
+                IndexNumber = seasonNumber,
+            },
         };
 
         return Task.FromResult(result);

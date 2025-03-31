@@ -46,7 +46,7 @@ public sealed class PlayedStateService : IDisposable
             IsFolder = false,
             SourceTypes = [SourceType.Library],
             IsVirtualItem = false,
-            HasAnyProviderId = new Dictionary<string, string>() { { ProviderIds.ShizouEp, string.Empty } },
+            HasAnyProviderId = new Dictionary<string, string> { { ProviderIds.ShizouEp, string.Empty } },
         });
         for (var idx = 0; idx < videos.Count; idx++)
         {

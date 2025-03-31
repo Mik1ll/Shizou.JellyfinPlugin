@@ -27,20 +27,21 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
         if (epIds is null)
             return new MetadataResult<Episode>();
         var episodes = (await _shizouClientManager.GetEpisodesAsync(animeId, cancellationToken).ConfigureAwait(false))
-            ?.Where(e => epIds.Contains(e.Id)).ToList();
+            ?.Where(e => epIds.Contains(e.Id)).OrderBy(GetEpIndex).ToList();
         if (episodes?.Count is null or 0)
             return new MetadataResult<Episode>();
 
-        episodes = episodes.OrderBy(ep => ep.EpisodeType).ThenBy(ep => ep.Number).ToList();
         var episode = episodes.First();
 
-        var lastNum = episode.Number;
-        foreach (var ep in episodes.Where(ep => ep.EpisodeType == episode.EpisodeType && ep.Number != episode.Number)
-                     .Select(ep => ep.Number).Distinct().Order())
-            if (lastNum + 1 == ep)
-                lastNum++;
-            else
-                break;
+        var lastNum = episode.Number - 1;
+        // ReSharper disable once AccessToModifiedClosure
+        var lastEpisode = episodes.DistinctBy(ep => ep.Number)
+            .Where(ep => ep.EpisodeType == episode.EpisodeType)
+            .OrderBy(GetEpIndex)
+            .TakeWhile(ep => ++lastNum == ep.Number)
+            .Last();
+
+        var epName = string.Join(" / ", episodes.Select(e => e.TitleEnglish));
 
         DateTimeOffset? airDateOffset = episode.AirDate is null ? null : new DateTimeOffset(episode.AirDate.Value.DateTime, TimeSpan.FromHours(9));
         var result = new MetadataResult<Episode>
@@ -48,28 +49,32 @@ public class EpisodeProvider : IRemoteMetadataProvider<Episode, EpisodeInfo>
             HasMetadata = true,
             Item = new Episode
             {
-                Name = episode.EpisodeType switch
-                    {
-                        EpisodeType.Special => "S",
-                        EpisodeType.Credits => "C",
-                        EpisodeType.Trailer => "T",
-                        EpisodeType.Parody => "P",
-                        EpisodeType.Other => "O",
-                        _ => "",
-                    } + $"{episode.Number + (lastNum != episode.Number ? $"-{lastNum}" : "")}. {episode.TitleEnglish}",
+                Name = epName,
                 Overview = episode.Summary,
                 RunTimeTicks = episode.DurationMinutes is not null ? TimeSpan.FromMinutes(episode.DurationMinutes.Value).Ticks : null,
                 OriginalTitle = episode.TitleOriginal,
                 PremiereDate = airDateOffset?.UtcDateTime,
                 ProductionYear = airDateOffset?.Year,
-                IndexNumber = (int)episode.EpisodeType * 1000 + episode.Number,
-                IndexNumberEnd = lastNum != episode.Number ? (int)episode.EpisodeType * 1000 + lastNum : null,
-                ParentIndexNumber = episode.EpisodeType == EpisodeType.Episode ? null : 0,
+                IndexNumber = GetEpIndex(episode),
+                IndexNumberEnd = lastEpisode != episode ? GetEpIndex(lastEpisode) : null,
+                ParentIndexNumber = episode.EpisodeType == EpisodeType.Episode ? 1 : 0,
                 ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouEp, fileId.ToString() } },
             },
         };
 
         return result;
+
+        int GetEpIndex(AniDbEpisode ep) =>
+            ep.EpisodeType switch
+            {
+                EpisodeType.Episode => 0,
+                EpisodeType.Other => 1,
+                EpisodeType.Special => 2,
+                EpisodeType.Credits => 3,
+                EpisodeType.Trailer => 4,
+                EpisodeType.Parody => 5,
+                _ => throw new IndexOutOfRangeException(nameof(ep.EpisodeType)),
+            } * 10000 + ep.Number;
     }
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) =>

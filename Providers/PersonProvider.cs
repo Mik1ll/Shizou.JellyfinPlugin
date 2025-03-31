@@ -15,13 +15,13 @@ public class PersonProvider : IRemoteMetadataProvider<Person, PersonLookupInfo>
         if (info.GetProviderId(ProviderIds.ShizouCreator) is not { Length: > 0 } creatorId)
             return Task.FromResult(new MetadataResult<Person>());
 
-        return Task.FromResult(new MetadataResult<Person>()
+        return Task.FromResult(new MetadataResult<Person>
         {
             HasMetadata = true,
-            Item = new Person()
+            Item = new Person
             {
                 Name = info.Name,
-                ProviderIds = new Dictionary<string, string>() { { ProviderIds.ShizouCreator, creatorId } }
+                ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouCreator, creatorId } }
             }
         });
     }

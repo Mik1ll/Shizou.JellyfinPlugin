@@ -5,6 +5,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
+using Shizou.HttpClient;
 using Shizou.JellyfinPlugin.ExternalIds;
 
 namespace Shizou.JellyfinPlugin.Providers;
@@ -74,13 +75,32 @@ public partial class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo
         var credits = await _shizouClientManager.GetCreditsAsync(animeId, cancellationToken).ConfigureAwait(false);
         if (credits is null)
             return;
-        foreach (var credit in credits)
+        foreach (var credit in credits.Where(c => c.AniDbCreator.Type is CreatorType.Person))
             if (!string.IsNullOrWhiteSpace(credit.AniDbCreator.Name))
                 result.AddPerson(new PersonInfo
                 {
                     Name = credit.AniDbCreator.Name,
                     Role = credit.AniDbCharacter?.Name ?? credit.Role,
-                    Type = credit.AniDbCharacterId is null ? PersonKind.Unknown : PersonKind.Actor,
+                    Type = credit.AniDbCharacterId is null
+                        ? credit.Role switch
+                        {
+                            { } r when r.Contains("Producer", StringComparison.OrdinalIgnoreCase) => PersonKind.Producer,
+                            { } r when r.Contains("Direct", StringComparison.OrdinalIgnoreCase) => PersonKind.Director,
+                            { } r when r.Contains("Original", StringComparison.OrdinalIgnoreCase) => PersonKind.Author,
+                            { } r when r.Contains("Sound", StringComparison.OrdinalIgnoreCase) => PersonKind.Engineer,
+                            { } r when r.Contains("Edit", StringComparison.OrdinalIgnoreCase) => PersonKind.Editor,
+                            { } r when r.Contains("Lyric", StringComparison.OrdinalIgnoreCase) => PersonKind.Lyricist,
+                            { } r when r.Contains("Colo", StringComparison.OrdinalIgnoreCase) => PersonKind.Colorist,
+                            { } r when r.Contains("Character", StringComparison.OrdinalIgnoreCase) => PersonKind.Illustrator,
+                            { } r when r.Contains("Writ", StringComparison.OrdinalIgnoreCase) ||
+                                       r.Contains("Script", StringComparison.OrdinalIgnoreCase) => PersonKind.Writer,
+                            { } r when r.Contains("Arrang", StringComparison.OrdinalIgnoreCase) => PersonKind.Arranger,
+                            { } r when r.Contains("Compos", StringComparison.OrdinalIgnoreCase) => PersonKind.Composer,
+                            { } r when r.Contains("Music", StringComparison.OrdinalIgnoreCase) => PersonKind.Artist,
+                            { } r when r.Contains("Mix", StringComparison.OrdinalIgnoreCase) => PersonKind.Mixer,
+                            _ => PersonKind.Creator,
+                        }
+                        : PersonKind.Actor,
                     SortOrder = credit.AniDbCharacterId is not null
                         ? credit.Role switch
                         {

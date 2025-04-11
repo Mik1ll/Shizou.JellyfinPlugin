@@ -21,8 +21,8 @@ public class PersonProvider : IRemoteMetadataProvider<Person, PersonLookupInfo>
             Item = new Person
             {
                 Name = info.Name,
-                ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouCreator, creatorId } }
-            }
+                ProviderIds = new Dictionary<string, string> { { ProviderIds.ShizouCreator, creatorId } },
+            },
         });
     }
 

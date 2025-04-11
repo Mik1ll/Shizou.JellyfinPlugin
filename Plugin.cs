@@ -1,6 +1,9 @@
 ﻿using System.Globalization;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Shizou.JellyfinPlugin.Configuration;
@@ -9,7 +12,13 @@ namespace Shizou.JellyfinPlugin;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer) => Instance = this;
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, IServerConfigurationManager serverConfigurationManager) : base(
+        applicationPaths, xmlSerializer)
+    {
+        if (serverConfigurationManager.GetMetadataOptionsForType(nameof(Person)) is { } personOpts)
+            personOpts.DisabledImageFetchers = personOpts.DisabledImageFetchers.Union(["TheMovieDb"]).ToArray();
+        Instance = this;
+    }
 
     public static Plugin Instance { get; private set; } = null!;
 

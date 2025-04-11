@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Net;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Shizou.HttpClient;
@@ -38,8 +39,18 @@ public class ShizouClientManager
         }
     }
 
-    public Task<HttpResponseMessage> GetAsync(string url, CancellationToken cancellationToken) =>
-        WithLoginRetry(ct => _httpClient.GetAsync(new Uri(new Uri(_shizouHttpClient.BaseUrl), url).AbsoluteUri, ct), cancellationToken);
+    public async Task<HttpResponseMessage> GetAsync(string url, CancellationToken cancellationToken)
+    {
+        var uri = new Uri(new Uri(_shizouHttpClient.BaseUrl), url).AbsoluteUri;
+        var res = await _httpClient.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+        if (res.StatusCode != HttpStatusCode.Unauthorized)
+            return res;
+
+        await LoginAsync(cancellationToken).ConfigureAwait(false);
+        res = await _httpClient.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+
+        return res;
+    }
 
     public Task<ICollection<FileWatchedState>> GetAllWatchedStates(CancellationToken cancellationToken) =>
         WithLoginRetry(ct => _shizouHttpClient.FileWatchedStatesGetAllAsync(ct), cancellationToken);
@@ -48,6 +59,29 @@ public class ShizouClientManager
         WithLoginRetry(ct => played
             ? _shizouHttpClient.AniDbFilesMarkWatchedAsync(fileId, ct)
             : _shizouHttpClient.AniDbFilesMarkUnwatchedAsync(fileId, ct), cancellationToken);
+
+    public async Task<(byte[] img, string mimeType)?> GetCreatorImageAsync(int creatorId, CancellationToken cancellationToken)
+    {
+        var key = $"anidb-creator-image-{creatorId}";
+        var res = await _memoryCache.GetOrCreateAsync<(byte[], string)?>(key, async entry =>
+        {
+            entry.SlidingExpiration = TimeSpan.FromHours(1);
+            var img = await Catch404(WithLoginRetry(ct => _shizouHttpClient.ImagesGetCreatorImageAsync(creatorId, ct), cancellationToken))
+                .ConfigureAwait(false);
+
+            if (img is null)
+                return null;
+
+            await using (img.Stream.ConfigureAwait(false))
+            {
+                using var memStream = new MemoryStream();
+                await img.Stream.CopyToAsync(memStream, cancellationToken).ConfigureAwait(false);
+                return (memStream.ToArray(), img.Headers.GetValueOrDefault("Content-Type", ["image/jpeg"]).First());
+            }
+        }).ConfigureAwait(false);
+
+        return res;
+    }
 
     public async Task<AniDbAnime?> GetAnimeAsync(int animeId, CancellationToken cancellationToken)
     {

@@ -49,9 +49,10 @@ public partial class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo
                 Overview = overview,
                 HomePageUrl = $"https://anidb.net/anime/{animeId}",
                 ProductionYear = airDateOffset?.Year,
-                Status = airDateOffset <= DateTime.Now ? SeriesStatus.Ended :
-                    airDateOffset > DateTime.Now ? SeriesStatus.Unreleased :
-                    airDateOffset is not null && endDateOffset is not null ? SeriesStatus.Continuing : null,
+                Status = endDateOffset <= DateTimeOffset.UtcNow ? SeriesStatus.Ended :
+                    airDateOffset is null ? null :
+                    airDateOffset > DateTimeOffset.UtcNow ? SeriesStatus.Unreleased :
+                    SeriesStatus.Continuing,
                 CommunityRating = anime.Rating,
                 Tags = anime.Tags.ToArray(),
                 ProviderIds = new Dictionary<string, string> { { ProviderIds.Shizou, animeId } },

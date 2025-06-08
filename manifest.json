@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "2.5.1.0",
+                "changelog": "## What's Changed\n* Fix airing status by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/43\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.5.0...v2.5.1",
+                "targetAbi": "10.9.9.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou.JellyfinPlugin/releases/download/v2.5.1/shizou_2.5.1.0.zip",
+                "checksum": "b5fdb664bc1f82504a1a8698625270c3",
+                "timestamp": "2025-06-08T06:04:22Z"
+            },
+            {
                 "version": "2.5.0.0",
                 "changelog": "## What's Changed\n* People image fixes by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/41\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.4.1...v2.5.0",
                 "targetAbi": "10.9.9.0",

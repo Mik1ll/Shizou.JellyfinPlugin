@@ -1,4 +1,6 @@
-﻿using Jellyfin.Data.Enums;
+﻿using Jellyfin.Data;
+using Jellyfin.Data.Enums;
+using Jellyfin.Database.Implementations.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -51,9 +53,9 @@ public sealed class PlayedStateService : IDisposable
         for (var idx = 0; idx < videos.Count; idx++)
         {
             var vid = videos[idx];
-            if (!fileStates.TryGetValue(Convert.ToInt32(vid.ProviderIds[ProviderIds.ShizouEp]), out var fileState))
+            if (!fileStates.TryGetValue(Convert.ToInt32(vid.ProviderIds[ProviderIds.ShizouEp]), out var fileState)
+                || _userDataManager.GetUserData(adminUser, vid) is not { } userDataItem)
                 continue;
-            var userDataItem = _userDataManager.GetUserData(adminUser, vid);
             if (userDataItem.Played != fileState.Watched)
             {
                 _logger.LogInformation("Found out of sync played state: AniDB file ID: {AniDbFileId}, Jellyfin: {JellyState}, Shizou: {ShizouState}",

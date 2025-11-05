@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <LangVersion>12</LangVersion>
+        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <InvariantGlobalization>true</InvariantGlobalization>
@@ -11,8 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Jellyfin.Controller" Version="10.9.9" ExcludeAssets="runtime" />
-        <PackageReference Include="Shizou.HttpClient" Version="1.8.1" />
+        <PackageReference Include="Jellyfin.Controller" Version="10.11.2" ExcludeAssets="runtime" />
+        <PackageReference Include="Shizou.HttpClient" Version="1.11.1" />
     </ItemGroup>
 
     <ItemGroup>

@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "3.0.0.0",
+                "changelog": "## What's Changed\n* Upgrade to ABI 10.11.2 & .net 9 by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/45\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.5.1...v3.0.0",
+                "targetAbi": "10.11.2.0",
+                "sourceUrl": "https://github.com/Mik1ll/Shizou.JellyfinPlugin/releases/download/v3.0.0/shizou_3.0.0.0.zip",
+                "checksum": "66db585fe92083016ea108338e80aee2",
+                "timestamp": "2025-11-05T07:26:22Z"
+            },
+            {
                 "version": "2.5.1.0",
                 "changelog": "## What's Changed\n* Fix airing status by @Mik1ll in https://github.com/Mik1ll/Shizou.JellyfinPlugin/pull/43\n\n\n**Full Changelog**: https://github.com/Mik1ll/Shizou.JellyfinPlugin/compare/v2.5.0...v2.5.1",
                 "targetAbi": "10.9.9.0",
